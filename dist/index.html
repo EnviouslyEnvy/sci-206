@@ -1,0 +1,1674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lights Back On — a generator game</title>
+<style>
+:root{
+  --bg:#090d1a; --panel:#121930; --panel2:#19223f; --line:#2a3558; --ink:#eaf0fb; --mute:#9eabc9;
+  --amber:#ffbe55; --copper:#e08a4f; --teal:#7fe0e6; --ok:#74d8a0; --warn:#ffb14a; --n:#e2574c; --s:#3f86e0;
+  --font: ui-rounded, "SF Pro Rounded", "Nunito", "Segoe UI", system-ui, -apple-system, sans-serif;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:radial-gradient(1200px 600px at 70% -10%, #1b2748 0%, var(--bg) 60%) fixed, var(--bg);color:var(--ink);font:15px/1.45 var(--font);-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--teal);outline-offset:2px;border-radius:6px}
+[hidden]{display:none!important}
+
+#app{min-height:100vh;display:grid;grid-template-rows:auto 1fr auto auto;gap:10px;padding:10px 14px 14px;max-width:1500px;margin:0 auto}
+.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:8px;font-weight:800;letter-spacing:.2px;color:var(--amber);font-size:17px;white-space:nowrap}
+.objective{flex:1 1 320px;min-width:240px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:7px 14px;display:flex;gap:10px;align-items:center;font-weight:600}
+.obj-tag{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#0b1020;background:var(--amber);border-radius:999px;padding:2px 8px;font-weight:800}
+.top-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tbtn{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px;min-height:40px}
+.tbtn:hover{background:var(--panel2)}
+.count{display:inline-block;min-width:20px;text-align:center;background:var(--line);border-radius:999px;font-size:12px;padding:1px 6px;margin-left:4px}
+.pips{display:flex;align-items:center;gap:5px;color:var(--mute);font-size:12px}
+.pips i{width:12px;height:12px;border-radius:50%;border:2px solid var(--line);display:block}
+.pips i.on{background:var(--amber);border-color:var(--amber);box-shadow:0 0 10px #ffbe5599}
+.supplies{background:#23301f;border:1px solid #3d5a36;color:#bfe8b0;border-radius:10px;padding:8px 12px;font-weight:600}
+.supplies b{font-size:16px;color:#fff}
+.supplies.bump{animation:bump .5s}
+@keyframes bump{40%{transform:scale(1.18)}}
+
+.stage{display:grid;grid-template-columns:minmax(0,1.58fr) minmax(0,1fr);gap:12px;align-items:stretch;min-height:0}
+.card{background:linear-gradient(180deg,#141c35,#0f152a);border:1px solid var(--line);border-radius:18px;padding:10px;position:relative;display:flex;flex-direction:column;justify-content:center;min-width:0}
+.card>svg{display:block;width:100%;height:auto;min-height:220px;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+#gen{max-height:calc(100vh - 428px)}
+#house{max-height:calc(100vh - 478px)}
+.fine{margin:2px 2px 0;color:var(--mute);font-size:11.5px}
+.chip{position:absolute;top:12px;left:12px;z-index:2;background:#0b1020cc;border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px;max-width:calc(100% - 24px)}
+.chip::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--mute);flex:none}
+.chip[data-k=stable]::before{background:var(--ok)} .chip[data-k=stable]{border-color:#2f6b4a}
+.chip[data-k=more]::before{background:var(--warn);animation:blink 1s infinite} .chip[data-k=more]{border-color:#8a5a1c;color:#ffd9a0}
+.chip[data-k=open]::before,.chip[data-k=noRooms]::before{background:var(--teal)}
+.chip[data-k=bright]::before{background:#fff}
+.chip[data-k=paused]::before{background:var(--amber)}
+@keyframes blink{50%{opacity:.25}}
+
+/* generator artwork */
+.plate{fill:url(#g-plate);stroke:#37436b;stroke-width:2}
+.sweep{fill:#0b102055;stroke:#3b4770;stroke-width:1.5;stroke-dasharray:4 6}
+#app.struggle .sweep{stroke:var(--warn)}
+.slot{fill:#0b1020;stroke:#3b4770;stroke-width:1.5;stroke-dasharray:5 4}
+.core{fill:url(#g-iron);stroke:#3b4251;stroke-width:1.5}
+.bobbin{fill:#20294688;stroke:#56628c;stroke-width:1.5}
+.flange{fill:#56628c}
+.wire{fill:none;stroke:#d9824a;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round;transition:stroke .2s}
+.wire.thick{stroke-width:4.6}
+.wire.live{stroke:#ffc38d;filter:drop-shadow(0 0 4px #ffb06a)}
+.belt{fill:none;stroke:#0c0f1a;stroke-width:4;opacity:.85}
+.hub{fill:#8a93a6;stroke:#0b1020;stroke-width:2}
+.hub.gold{fill:#f0c65a}
+.hub-dot{fill:#0b1020}
+.pole{font:800 17px var(--font);fill:#fff;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.axle-hint{fill:none;stroke:#3b4770;stroke-width:1.5;stroke-dasharray:4 6}
+.wheel{fill:#2c3657;stroke:#aeb8d4;stroke-width:5}
+.spoke{stroke:#aeb8d4;stroke-width:4;stroke-linecap:round}
+.knob{fill:var(--amber);stroke:#0b1020;stroke-width:2}
+.blade{fill:#cfd8ee;stroke:#0b1020;stroke-width:1.5}
+#a-crank.ready{cursor:pointer}
+.field{stroke:#fff;stroke-width:3;stroke-linecap:round;opacity:.9;pointer-events:none}
+.tiny{font:600 10.5px var(--font);fill:var(--mute);letter-spacing:.3px;pointer-events:none}
+.arc{fill:none;stroke-width:5;stroke-linecap:round}
+.arc.drive{stroke:var(--amber)} .arc.drag{stroke:var(--teal)}
+.tag{font:800 12px var(--font);pointer-events:none}
+.tag.drive{fill:var(--amber)} .tag.drag{fill:var(--teal)}
+.meter{fill:#0b1020;stroke:#56628c;stroke-width:2}
+#ticks line{stroke:#9eabc9;stroke-width:1.5} #ticks text{font:600 9.5px var(--font);fill:#9eabc9;text-anchor:middle;dominant-baseline:central}
+#needle{stroke:var(--amber);stroke-width:3;stroke-linecap:round}
+#volt-text{font:800 15px var(--font);fill:#fff}
+.mlead{fill:none;stroke:#56628c;stroke-width:2}
+.terminal{fill:#c9a24b;stroke:#0b1020;stroke-width:2}
+.scope{fill:#06120f;stroke:#2c6b57;stroke-width:2}
+#scope-path{fill:none;stroke:#6df0b2;stroke-width:2}
+.hot-i{cursor:pointer}
+.hot-i circle{fill:var(--teal);stroke:#0b1020;stroke-width:2}
+.hot-i text{font:800 14px Georgia,serif;font-style:italic;fill:#0b1020;text-anchor:middle;pointer-events:none}
+.hot-i.new circle{animation:pulse 1.6s infinite}
+@keyframes pulse{50%{stroke:#fff;stroke-width:5}}
+[data-explain]{cursor:help}
+.zone{fill:transparent;stroke:transparent;stroke-width:3;pointer-events:none}
+#gen.placing .zone{pointer-events:all;cursor:copy}
+#gen.placing .zone.hot{fill:#ffbe5522;stroke:var(--amber);stroke-dasharray:8 6;animation:dash 1s linear infinite}
+#gen.placing .zone.hot.over{fill:#ffbe5555}
+@keyframes dash{to{stroke-dashoffset:-28}}
+/* parts not yet placed */
+#gen:not(.has-magnet) .p-magnet,#gen:not(.has-wire) .p-wire,#gen:not(.has-core) .p-core,#gen:not(.has-crank) .p-crank{display:none}
+#gen.has-core .slot{display:none}
+#gen:not(.has-wire) .p-meter{opacity:.45}
+
+/* house */
+.rbase{fill:#111830}
+.rglow{opacity:0;pointer-events:none}
+.furn{fill:#070b17;opacity:.9}
+.cord{stroke:#56628c;stroke-width:2}
+.bulb-off{fill:#2a3558;stroke:#56628c;stroke-width:1.5}
+.bulb-on{fill:#fff6d0;opacity:0;filter:drop-shadow(0 0 8px #ffd77a)}
+.rname{font:700 12px var(--font);fill:#c9d3ec;pointer-events:none}
+.room.lit .rname{fill:#3a2606}
+.rpct{font:800 12px var(--font);fill:#c9d3ec;pointer-events:none}
+.room.lit .rpct{fill:#3a2606}
+.rlock{font:600 11px var(--font);fill:#5d6a90;pointer-events:none}
+.room.open .rlock{display:none}
+.rhit{fill:transparent;cursor:not-allowed}
+.room.open .rhit{cursor:pointer}
+.hwire{fill:none;stroke:#7a4a2a;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;opacity:.5}
+.hwire.wired{opacity:1;stroke:#d9824a}
+.hwire.live{stroke:#ffc38d;filter:drop-shadow(0 0 4px #ffb06a)}
+.swg circle{fill:#c9a24b}
+.swg line{stroke:#e9edf7;stroke-width:3;stroke-linecap:round;transform-box:fill-box;transform-origin:left center;transform:rotate(-35deg);transition:transform .15s}
+.swg.on line{transform:rotate(0)}
+.rain line{stroke:#8fb4ff;stroke-width:1;opacity:.22}
+.rain{animation:rain .7s linear infinite}
+@keyframes rain{to{transform:translate(-14px,60px)}}
+.switches{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
+.sw{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:6px 10px;min-height:48px;text-align:left;display:grid;grid-template-columns:1fr auto;gap:0 8px;align-items:center}
+.sw .nm{font-weight:700;font-size:13px}
+.sw .st{grid-row:1/3;grid-column:2;width:44px;height:24px;border-radius:999px;background:#2a3558;position:relative;transition:background .15s}
+.sw .st::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#cfd8ee;transition:left .15s}
+.sw .tx{font-size:11.5px;color:var(--mute)}
+.sw[aria-checked=true]{border-color:#8a6a2a;background:#2a2413}
+.sw[aria-checked=true] .st{background:var(--amber)} .sw[aria-checked=true] .st::after{left:23px;background:#fff}
+.sw:disabled{opacity:.45;cursor:not-allowed}
+
+.crewline{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:8px 14px;min-height:40px;display:flex;gap:10px;align-items:center}
+.crewline .who{font-weight:800;color:var(--teal);white-space:nowrap}
+.crewline .who:empty{display:none}
+.crewline.pop{animation:pop .35s}
+@keyframes pop{0%{transform:translateY(4px);opacity:.4}}
+
+.deck{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr) minmax(0,1.25fr);gap:12px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px;min-width:0}
+.panel h2{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--mute)}
+.hint{color:var(--mute);font-size:12.5px;margin:6px 0 0}
+#crank-box{display:flex;gap:14px;align-items:center}
+.crank-btn{flex:none;width:106px;height:106px;border-radius:50%;border:4px solid #7a5a1c;background:radial-gradient(circle at 35% 30%,#ffd98a,#f0a12c 60%,#b9701c);color:#2a1800;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-shadow:0 6px 0 #5a4010,0 10px 24px #0008;transition:transform .06s,box-shadow .06s;touch-action:none;user-select:none;-webkit-user-select:none}
+.crank-btn .cb-main{font-size:21px;font-weight:900}
+.crank-btn .cb-sub{font-size:10.5px;font-weight:700;opacity:.8}
+.crank-btn.down,.crank-btn:active{transform:translateY(4px);box-shadow:0 2px 0 #5a4010,0 4px 10px #0008}
+.crank-btn:disabled{filter:grayscale(1) brightness(.6);cursor:not-allowed}
+.crank-side{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
+.latch{display:flex;gap:8px;align-items:center;min-height:36px;font-weight:600}
+.latch input{width:20px;height:20px;accent-color:var(--amber)}
+#effort-box label{display:flex;justify-content:space-between;font-weight:600;font-size:13px}
+#effort-box output{color:var(--amber);font-weight:800}
+input[type=range]{width:100%;height:32px;accent-color:var(--amber)}
+.mrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:4px 0;font-size:13.5px}
+.mrow>span{color:var(--mute)}
+.mrow b{font-variant-numeric:tabular-nums}
+.bar{flex:1;max-width:60%;height:12px;background:#0b1020;border-radius:999px;overflow:hidden;border:1px solid var(--line)}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#f0a12c,#ffd98a);border-radius:999px}
+#power-box{border-top:1px dashed var(--line);margin-top:4px;padding-top:4px}
+.split{display:flex;height:14px;border-radius:999px;overflow:hidden;background:#0b1020;border:1px solid var(--line)}
+.split i{display:block;height:100%;width:0}
+#m-split-load{background:var(--amber)} #m-split-heat{background:#c2574e}
+.legend{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--mute);margin-top:4px;flex-wrap:wrap}
+.legend .k::before{content:"";display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px}
+.legend .load::before{background:var(--amber)} .legend .heat::before{background:#c2574e}
+.legend b{color:var(--ink)}
+
+#tray{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:8px}
+.part{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:8px;min-height:74px;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;touch-action:none}
+.part svg{width:64px;height:30px;min-height:0;max-height:none}
+.part b{font-size:13px} .part small{font-size:11px;color:var(--mute)}
+.part:hover{border-color:var(--amber)}
+.part.sel{border-color:var(--amber);background:#2a2413;box-shadow:0 0 0 2px #ffbe5555}
+.windbtn{grid-column:1/-1;background:#2a2413;border:2px solid var(--amber);border-radius:12px;padding:12px;font-weight:800;min-height:56px;position:relative;overflow:hidden;touch-action:none}
+.windbtn i{position:absolute;left:0;top:0;bottom:0;background:#ffbe5533;width:0}
+.windbtn span{position:relative}
+#shop{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.up{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:9px 10px;text-align:left;min-height:84px;display:flex;flex-direction:column;gap:3px}
+.up b{font-size:13.5px} .up small{font-size:11.5px;color:var(--mute);line-height:1.3}
+.up .cost{font-size:12px;font-weight:800;color:#bfe8b0}
+.up:hover:not(:disabled){border-color:var(--amber)}
+.up.owned{border-color:#2f6b4a;background:#152a22;cursor:default} .up.owned .cost{color:var(--ok)}
+.up.poor .cost{color:#e0a0a0}
+#notes ul{margin:0;padding:0;list-style:none;display:grid;gap:6px}
+#notes button{width:100%;text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px 10px;min-height:40px}
+
+/* overlays */
+.overlay{position:fixed;inset:0;background:#050812d9;display:grid;place-items:center;z-index:50;padding:16px}
+.intro{background:#03050c}
+.flash{position:absolute;inset:0;background:#dfe8ff;opacity:0;pointer-events:none}
+.flash.go{animation:flash 1.4s ease-out}
+@keyframes flash{0%{opacity:0}6%{opacity:.9}12%{opacity:.15}18%{opacity:.7}100%{opacity:0}}
+.intro-card,.modal{position:relative;max-width:560px;width:100%;background:linear-gradient(180deg,#141c35,#0f152a);border:1px solid var(--line);border-radius:20px;padding:26px}
+.intro-card h1{margin:0;font-size:34px;color:var(--amber);letter-spacing:.3px}
+.intro-card .sub{margin:2px 0 16px;color:var(--mute)}
+#intro-lines p{margin:0 0 10px;font-size:17px;opacity:0;transform:translateY(6px);transition:opacity .6s,transform .6s}
+#intro-lines p.in{opacity:1;transform:none}
+#intro-lines p:last-child{font-weight:800;color:#fff}
+.intro-btns{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+.primary{background:var(--amber);color:#2a1800;border:0;border-radius:12px;padding:11px 18px;font-weight:800;min-height:44px}
+.primary:hover{filter:brightness(1.08)}
+.ghost{background:transparent;border:1px solid var(--line);border-radius:12px;padding:11px 16px;min-height:44px;font-weight:600}
+.ghost:hover{background:var(--panel2)}
+.modal h2{margin:0 0 8px;font-size:21px}
+.opts{display:grid;gap:8px;margin-top:12px}
+.opts button{text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;min-height:48px;font-weight:600}
+.opts button:hover{border-color:var(--amber)}
+.modal.end{max-width:640px;max-height:92vh;overflow:auto}
+.modal.end h2{font-size:30px;color:var(--amber)}
+.lead{font-size:16px;font-weight:600}
+#end-recap{padding-left:20px;margin:10px 0;display:grid;gap:7px;color:#d7def0}
+
+.ring{position:fixed;z-index:60;border:3px solid var(--amber);border-radius:14px;pointer-events:none;box-shadow:0 0 0 9999px #05081266;animation:ringp 1.4s infinite}
+@keyframes ringp{50%{border-color:#fff}}
+.bubble{position:fixed;z-index:61;width:min(350px,calc(100vw - 24px));background:#fdf8ec;color:#1c1a14;border-radius:16px;padding:14px 16px 12px;box-shadow:0 14px 40px #000a}
+.bubble h3{margin:2px 0 6px;font-size:18px;line-height:1.2}
+.bubble p{margin:0;font-size:14.5px}
+.b-topic{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#8a6a2a;font-weight:800}
+.b-arrow{position:absolute;width:16px;height:16px;background:#fdf8ec;transform:rotate(45deg)}
+.b-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px}
+.b-pause{font-size:12px;color:#7a6a4a;font-weight:700}
+.bubble .primary{background:#1c1a14;color:#fdf8ec;min-height:40px;padding:8px 16px}
+#bubble-fig{margin-top:10px}
+#bubble-fig:empty{display:none}
+.fig{background:#f1e8d2;border-radius:10px;padding:8px 10px;font-size:12.5px}
+.fig .cap{font-weight:800;margin-bottom:6px}
+.fig .r{display:grid;grid-template-columns:86px 1fr 62px;gap:6px;align-items:center;margin:3px 0}
+.fig .r i{display:block;height:10px;border-radius:999px;background:#c98a3a}
+.fig .r.after i{background:#2d7d5a}
+.fig .r b{text-align:right;font-variant-numeric:tabular-nums}
+.fig svg{width:100%;height:auto;min-height:0;max-height:none}
+
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(400px,100vw);background:#10172c;border-left:1px solid var(--line);z-index:55;padding:16px;overflow:auto;box-shadow:-20px 0 50px #0008}
+.drawer-head{display:flex;justify-content:space-between;align-items:center}
+.drawer h2{margin:0;font-size:20px}
+.drawer h3{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--amber);margin:16px 0 6px}
+.entry{display:block;width:100%;text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:6px}
+.entry b{display:block} .entry span{font-size:13px;color:#c9d3ec}
+.entry:hover{border-color:var(--amber)}
+.locked{border:1px dashed var(--line);border-radius:12px;padding:8px 12px;margin-bottom:6px;color:var(--mute);font-size:13px}
+
+.toast{position:fixed;left:50%;top:64px;transform:translateX(-50%);background:#fdf8ec;color:#1c1a14;border-radius:12px;padding:10px 16px;font-weight:700;z-index:70;max-width:min(520px,calc(100vw - 24px));box-shadow:0 10px 30px #000a}
+.ghost-part{position:fixed;z-index:80;pointer-events:none;background:#2a2413;border:2px solid var(--amber);border-radius:12px;padding:6px 10px;font-weight:800;transform:translate(-50%,-120%);white-space:nowrap}
+
+@media (max-width: 980px){
+  .stage{grid-template-columns:1fr}
+  .deck{grid-template-columns:1fr}
+  #gen,#house{max-height:none}
+}
+@media (max-width: 560px){
+  #app{padding:8px}
+  .crank-btn{width:96px;height:96px}
+  .brand span{display:none}
+}
+@media (prefers-reduced-motion: reduce){
+  .rain,.hot-i.new circle,.ring,.chip::before,#gen.placing .zone.hot{animation:none!important}
+  .flash.go{animation:none}
+  *{transition:none!important}
+}
+
+</style>
+</head>
+<body>
+<div id="app" data-stage="intro">
+  <header class="top">
+    <div class="brand"><svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M11 1 3 12h5l-1 7 8-11h-5z" fill="currentColor"/></svg><span>Lights Back On</span></div>
+    <div class="objective"><span class="obj-tag">Now</span><span id="objective" aria-live="polite"></span></div>
+    <div class="top-right">
+      <div class="pips" id="pips" role="img" aria-label="Rooms lit: 0 of 3"><i></i><i></i><i></i><span>rooms lit</span></div>
+      <div class="supplies" id="supplies-box" hidden title="Supplies are a game currency earned by discoveries. They are not stored electricity.">Supplies <b id="supplies">0</b></div>
+      <button class="tbtn" id="btn-log" type="button">Explanations <span id="log-count" class="count">0</span></button>
+      <button class="tbtn" id="btn-mute" type="button" aria-pressed="false">Sound: on</button>
+      <button class="tbtn" id="btn-restart" type="button">Restart</button>
+    </div>
+  </header>
+
+  <main class="stage">
+    <section class="bench card" aria-label="Generator workbench">
+      <div class="chip" id="status" role="status"></div>
+      <svg id="gen" viewBox="0 0 700 440" role="group" aria-label="Generator, seen from above">
+        <defs>
+          <linearGradient id="g-copper" x1="0" x2="1"><stop offset="0" stop-color="#8d4519"/><stop offset=".45" stop-color="#f3a970"/><stop offset="1" stop-color="#9a4d1e"/></linearGradient>
+          <linearGradient id="g-copper2" x1="0" x2="1"><stop offset="0" stop-color="#a85a24"/><stop offset=".45" stop-color="#ffc592"/><stop offset="1" stop-color="#b3642c"/></linearGradient>
+          <linearGradient id="g-iron" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#b9c1cd"/><stop offset="1" stop-color="#69717f"/></linearGradient>
+          <linearGradient id="g-plate" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#2a3352"/><stop offset="1" stop-color="#1c233b"/></linearGradient>
+          <marker id="ah-drive" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 10 5 0 10z" fill="#ffbe55"/></marker>
+          <marker id="ah-drag" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 10 5 0 10z" fill="#7fe0e6"/></marker>
+          <marker id="ah-field" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0 10 5 0 10z" fill="#fff"/></marker>
+        </defs>
+
+        <rect class="plate" x="30" y="70" width="500" height="240" rx="22"/>
+        <rect class="plate" x="196" y="296" width="148" height="132" rx="22"/>
+        <circle class="sweep" cx="270" cy="190" r="64"/>
+
+        <!-- stationary iron cores -->
+        <g id="a-coreL"><rect class="slot" x="60" y="172" width="146" height="36" rx="5"/><rect class="core p-core" x="60" y="172" width="146" height="36" rx="5"/></g>
+        <g id="a-coreR"><rect class="slot" x="334" y="172" width="146" height="36" rx="5"/><rect class="core p-core" x="334" y="172" width="146" height="36" rx="5"/></g>
+
+        <!-- output wiring (appears with the winding) -->
+        <g class="p-wire">
+          <path class="wire" id="w-link" d="M196 228V266H344V228"/>
+          <path class="wire" id="w-out1" d="M86 228V296H592"/>
+          <path class="wire" id="w-out2" d="M454 228V250H592"/>
+        </g>
+
+        <!-- stationary coil forms and windings -->
+        <g id="a-coilL" data-explain="winding,turns">
+          <rect class="bobbin" x="86" y="150" width="110" height="80" rx="6"/>
+          <g id="turnsL"></g>
+          <rect class="flange" x="81" y="143" width="6" height="94" rx="2"/><rect class="flange" x="195" y="143" width="6" height="94" rx="2"/>
+        </g>
+        <g id="a-coilR" data-explain="winding,turns,lenz">
+          <rect class="bobbin" x="344" y="150" width="110" height="80" rx="6"/>
+          <g id="turnsR"></g>
+          <rect class="flange" x="339" y="143" width="6" height="94" rx="2"/><rect class="flange" x="453" y="143" width="6" height="94" rx="2"/>
+        </g>
+        <g id="field" class="p-magnet">
+          <line id="fieldL" class="field" x1="141" y1="190" x2="141" y2="190" marker-end="url(#ah-field)"/>
+          <line id="fieldR" class="field" x1="399" y1="190" x2="399" y2="190" marker-end="url(#ah-field)"/>
+          <text class="tiny p-wire" x="141" y="250" text-anchor="middle">field through coil</text>
+          <text class="tiny p-wire" x="399" y="250" text-anchor="middle">field through coil</text>
+        </g>
+
+        <!-- belt + crank -->
+        <g class="p-crank"><path class="belt" d="M233 366 262 192M307 366 278 192"/></g>
+
+        <!-- rotor -->
+        <g id="a-rotor" data-explain="magnet,strongmagnet">
+          <g id="rotor" class="p-magnet">
+            <rect id="magN" x="212" y="172" width="58" height="36" fill="#e2574c"/>
+            <rect id="magS" x="270" y="172" width="58" height="36" fill="#3f86e0"/>
+            <rect id="magO" x="212" y="172" width="116" height="36" rx="5" fill="none" stroke="#0b1020" stroke-width="2"/>
+            <text id="lblN" class="pole" x="232" y="190">N</text>
+            <text id="lblS" class="pole" x="308" y="190">S</text>
+          </g>
+          <circle class="hub" id="hub" cx="270" cy="190" r="9"/>
+          <circle class="hub-dot" cx="270" cy="190" r="3"/>
+        </g>
+
+        <g id="a-crank" tabindex="-1">
+          <circle class="axle-hint" cx="270" cy="372" r="38"/>
+          <circle class="hub" cx="270" cy="372" r="7"/>
+          <g id="crankwheel" class="p-crank">
+            <circle class="wheel" cx="270" cy="372" r="38"/>
+            <path class="spoke" d="M232 372H308M270 334V410"/>
+            <circle class="knob" cx="296" cy="372" r="9"/>
+          </g>
+          <g id="turbine" hidden>
+            <path class="blade" d="M270 372C262 350 262 326 270 312 278 326 278 350 270 372Z"/>
+            <path class="blade" d="M270 372C262 350 262 326 270 312 278 326 278 350 270 372Z" transform="rotate(120 270 372)"/>
+            <path class="blade" d="M270 372C262 350 262 326 270 312 278 326 278 350 270 372Z" transform="rotate(240 270 372)"/>
+            <circle class="hub" cx="270" cy="372" r="8"/>
+          </g>
+        </g>
+
+        <!-- torque arrows -->
+        <g id="arrow-drive" class="p-crank" opacity="0"><path id="arc-drive" class="arc drive" marker-end="url(#ah-drive)"/><text class="tag drive" x="352" y="408" id="drive-tag">your push</text></g>
+        <g id="arrow-drag" opacity="0"><path id="arc-drag" class="arc drag" marker-end="url(#ah-drag)"/><text class="tag drag" x="270" y="100" text-anchor="middle">magnetic drag</text></g>
+
+        <!-- voltmeter + terminals -->
+        <g id="a-meter" class="p-meter" data-explain="induction,faster,stopped">
+          <text class="tiny" x="620" y="80" text-anchor="middle">VOLTMETER</text>
+          <rect class="meter" x="552" y="88" width="136" height="124" rx="14"/>
+          <g id="ticks"></g>
+          <line id="needle" x1="620" y1="170" x2="620" y2="122"/>
+          <circle cx="620" cy="170" r="5" fill="#e9edf7"/>
+          <text id="volt-text" x="620" y="201" text-anchor="middle">0.0 V</text>
+          <path class="mlead" d="M600 212V242M652 212V296H608"/>
+        </g>
+        <g id="a-terminals" data-explain="circuit">
+          <circle class="terminal" cx="600" cy="250" r="8"/><circle class="terminal" cx="600" cy="296" r="8"/>
+          <path class="wire lead" id="lead0" d="M608 250H700" hidden/>
+          <path class="wire lead" id="lead1" d="M608 296H700" hidden/>
+          <text class="tiny" id="tohouse" x="654" y="278" text-anchor="middle" hidden>to the house ▸</text>
+        </g>
+
+        <!-- voltage trace -->
+        <g id="a-scope" hidden data-explain="waveform">
+          <rect class="scope" x="552" y="330" width="136" height="84" rx="10"/>
+          <line x1="558" y1="372" x2="682" y2="372" stroke="#2a3558" stroke-width="1"/>
+          <path id="scope-path" d=""/>
+          <text class="tiny" x="620" y="428" text-anchor="middle">voltage over time</text>
+        </g>
+
+        <!-- inspect badges -->
+        <g class="hot-i" id="h-poles" data-inspect="poles" tabindex="0" role="button" aria-label="Inspect the magnet’s N and S poles" hidden><circle cx="170" cy="126" r="11"/><text x="170" y="131">i</text></g>
+        <g class="hot-i" id="h-coating" data-inspect="coating" tabindex="0" role="button" aria-label="Inspect the wire’s insulating coating" hidden><circle cx="470" cy="134" r="11"/><text x="470" y="139">i</text></g>
+        <g class="hot-i" id="h-scope" data-inspect="waveform" tabindex="0" role="button" aria-label="Inspect the voltage trace" hidden><circle cx="684" cy="334" r="11"/><text x="684" y="339">i</text></g>
+
+        <!-- drop zones (active only while placing a part) -->
+        <g id="zones">
+          <circle class="zone" data-zone="rotor" data-accept="magnet" cx="270" cy="190" r="62" role="button" aria-label="Rotor shaft, between the coil forms"/>
+          <rect class="zone" data-zone="coilL" data-accept="wire core" x="56" y="140" width="154" height="100" rx="12" role="button" aria-label="Left coil form"/>
+          <rect class="zone" data-zone="coilR" data-accept="wire core" x="330" y="140" width="154" height="100" rx="12" role="button" aria-label="Right coil form"/>
+          <circle class="zone" data-zone="crank" data-accept="crank" cx="270" cy="372" r="46" role="button" aria-label="Drive wheel mount"/>
+          <rect class="zone" data-zone="term0" data-accept="lead" x="590" y="234" width="110" height="32" rx="10" role="button" aria-label="Upper output terminal"/>
+          <rect class="zone" data-zone="term1" data-accept="lead" x="590" y="280" width="110" height="32" rx="10" role="button" aria-label="Lower output terminal"/>
+        </g>
+      </svg>
+      <p class="fine">Top-down view. Rotation is drawn slower than real speed so you can follow it.</p>
+    </section>
+
+    <section class="house card" aria-label="House">
+      <svg id="house" viewBox="0 0 440 440" role="group" aria-label="House cutaway with three rooms">
+        <defs>
+          <radialGradient id="glow0" cx="170" cy="286" r="150" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff3c4"/><stop offset=".35" stop-color="#ffcf6b"/><stop offset="1" stop-color="#b9701c"/></radialGradient>
+          <radialGradient id="glow1" cx="330" cy="286" r="150" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff3c4"/><stop offset=".35" stop-color="#ffcf6b"/><stop offset="1" stop-color="#b9701c"/></radialGradient>
+          <radialGradient id="glow2" cx="250" cy="166" r="170" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff3c4"/><stop offset=".35" stop-color="#ffcf6b"/><stop offset="1" stop-color="#b9701c"/></radialGradient>
+        </defs>
+        <g class="rain" aria-hidden="true" id="rain"></g>
+        <rect x="0" y="404" width="440" height="36" fill="#0d1322"/>
+        <!-- supply bus and parallel branches -->
+        <g id="bus">
+          <path class="hwire" id="bus-main" d="M0 420H40V190"/>
+          <path class="hwire" id="br-0" d="M40 330H90"/>
+          <path class="hwire" id="br-1" d="M40 420H424V330H410"/>
+          <path class="hwire" id="br-2" d="M40 190H130"/>
+          <text class="tiny" x="6" y="412">from the generator</text>
+          <g class="swg" id="swg-0"><circle cx="54" cy="330" r="3"/><circle cx="76" cy="330" r="3"/><line x1="54" y1="330" x2="76" y2="330"/></g>
+          <g class="swg" id="swg-1"><circle cx="300" cy="420" r="3"/><circle cx="322" cy="420" r="3"/><line x1="300" y1="420" x2="322" y2="420"/></g>
+          <g class="swg" id="swg-2"><circle cx="74" cy="190" r="3"/><circle cx="96" cy="190" r="3"/><line x1="74" y1="190" x2="96" y2="190"/></g>
+        </g>
+        <!-- shell -->
+        <path d="M62 152 250 40 438 152Z" fill="#232c47" stroke="#39456b" stroke-width="3" stroke-linejoin="round"/>
+        <rect x="330" y="62" width="26" height="50" fill="#232c47" stroke="#39456b" stroke-width="3"/>
+        <rect x="90" y="150" width="320" height="254" fill="#0f1526" stroke="#39456b" stroke-width="3"/>
+
+        <g class="room" id="room-2" data-room="2">
+          <rect class="rbase" x="130" y="152" width="240" height="118"/>
+          <rect class="rglow" x="130" y="152" width="240" height="118" fill="url(#glow2)"/>
+          <g class="furn"><rect x="160" y="232" width="120" height="22" rx="5"/><rect x="152" y="212" width="16" height="58" rx="4"/><rect x="170" y="222" width="38" height="14" rx="6"/><rect x="312" y="226" width="34" height="44" rx="3"/></g>
+          <line class="cord" x1="250" y1="152" x2="250" y2="164"/><circle class="bulb-off" cx="250" cy="170" r="8"/><circle class="bulb-on" cx="250" cy="170" r="8"/>
+          <text class="rname" x="138" y="168">Bedroom</text><text class="rpct" x="362" y="168" text-anchor="end"></text>
+          <text class="rlock" x="250" y="216" text-anchor="middle">not wired yet</text>
+          <rect class="rhit" x="130" y="152" width="240" height="118"/>
+        </g>
+        <g class="room" id="room-0" data-room="0">
+          <rect class="rbase" x="92" y="272" width="157" height="130"/>
+          <rect class="rglow" x="92" y="272" width="157" height="130" fill="url(#glow0)"/>
+          <g class="furn"><rect x="108" y="362" width="92" height="30" rx="8"/><rect x="104" y="350" width="14" height="42" rx="5"/><rect x="190" y="350" width="14" height="42" rx="5"/><rect x="218" y="340" width="6" height="52"/><path d="M208 340h26l-6-18h-14z"/></g>
+          <line class="cord" x1="170" y1="272" x2="170" y2="284"/><circle class="bulb-off" cx="170" cy="290" r="8"/><circle class="bulb-on" cx="170" cy="290" r="8"/>
+          <text class="rname" x="99" y="288">Living room</text><text class="rpct" x="243" y="288" text-anchor="end"></text>
+          <text class="rlock" x="170" y="330" text-anchor="middle">not wired yet</text>
+          <rect class="rhit" x="92" y="272" width="157" height="130"/>
+        </g>
+        <g class="room" id="room-1" data-room="1">
+          <rect class="rbase" x="251" y="272" width="157" height="130"/>
+          <rect class="rglow" x="251" y="272" width="157" height="130" fill="url(#glow1)"/>
+          <g class="furn"><rect x="356" y="318" width="40" height="74" rx="4"/><rect x="270" y="356" width="70" height="6" rx="2"/><rect x="276" y="362" width="5" height="30"/><rect x="329" y="362" width="5" height="30"/></g>
+          <line class="cord" x1="330" y1="272" x2="330" y2="284"/><circle class="bulb-off" cx="330" cy="290" r="8"/><circle class="bulb-on" cx="330" cy="290" r="8"/>
+          <text class="rname" x="258" y="288">Kitchen</text><text class="rpct" x="402" y="288" text-anchor="end"></text>
+          <text class="rlock" x="330" y="330" text-anchor="middle">not wired yet</text>
+          <rect class="rhit" x="251" y="272" width="157" height="130"/>
+        </g>
+        <path d="M90 271H410M250 271V404" stroke="#39456b" stroke-width="3"/>
+      </svg>
+      <div class="switches" id="switches"></div>
+    </section>
+  </main>
+
+  <div class="crewline" id="crew" aria-live="polite"><span class="who"></span><span class="say"></span></div>
+
+  <footer class="deck">
+    <div class="panel" id="crank-box">
+      <button id="crank-btn" class="crank-btn" type="button" disabled>
+        <span class="cb-main">Crank</span><span class="cb-sub">click · hold · Space</span>
+      </button>
+      <div class="crank-side">
+        <label class="latch" id="latch-box" hidden><input type="checkbox" id="latch"> <span>Keep cranking</span></label>
+        <div id="effort-box" hidden>
+          <label for="effort">How hard you push <output id="effort-out">50%</output></label>
+          <input type="range" id="effort" min="20" max="100" step="5" value="50">
+        </div>
+        <p class="hint" id="crank-hint">Build the generator first.</p>
+      </div>
+    </div>
+
+    <div class="panel" id="meters">
+      <div class="mrow" id="row-rpm" hidden><span>Rotor speed</span><b><span id="m-rpm">0</span> rpm</b></div>
+      <div class="mrow" id="row-effort" hidden><span>Your effort</span><div class="bar"><i id="m-effort"></i></div></div>
+      <div class="mrow" id="row-demand" hidden><span>Connected lighting</span><b id="m-demand">none</b></div>
+      <div id="power-box" hidden>
+        <div class="mrow"><span>Work going in</span><b><span id="m-pin">0</span> W</b></div>
+        <div class="split" aria-hidden="true"><i id="m-split-load"></i><i id="m-split-heat"></i></div>
+        <div class="legend"><span class="k load">reaching lamps <b id="m-pload">0</b> W</span><span class="k heat">lost as heat <b id="m-pheat">0</b> W</span></div>
+      </div>
+      <p class="hint" id="meters-hint">Readings appear as the machine comes together.</p>
+    </div>
+
+    <div class="panel" id="side">
+      <h2 id="side-title">Parts tray</h2>
+      <div id="tray"></div>
+      <div id="shop" hidden></div>
+      <div id="notes" hidden></div>
+    </div>
+  </footer>
+</div>
+
+<!-- overlays -->
+<div id="intro" class="overlay intro" role="dialog" aria-modal="true" aria-labelledby="intro-title">
+  <div class="flash" id="flash"></div>
+  <div class="intro-card">
+    <h1 id="intro-title">Lights Back On</h1>
+    <p class="sub" id="intro-sub"></p>
+    <div id="intro-lines"></div>
+    <div class="intro-btns">
+      <button id="intro-start" class="primary" type="button">Start building</button>
+      <button id="intro-skip" class="ghost" type="button">Skip intro</button>
+    </div>
+  </div>
+</div>
+
+<div id="ring" class="ring" hidden></div>
+<div id="bubble" class="bubble" role="dialog" aria-labelledby="bubble-title" hidden>
+  <div class="b-arrow" id="b-arrow"></div>
+  <div class="b-topic" id="bubble-topic"></div>
+  <h3 id="bubble-title"></h3>
+  <p id="bubble-body"></p>
+  <div id="bubble-fig"></div>
+  <div class="b-foot"><span class="b-pause" id="bubble-pause">Paused while you read</span><button id="bubble-ok" class="primary" type="button">Got it</button></div>
+</div>
+
+<div id="predict" class="overlay" role="dialog" aria-modal="true" aria-labelledby="predict-title" hidden>
+  <div class="modal"><h2 id="predict-title"></h2><p id="predict-q"></p><div id="predict-opts" class="opts"></div><p class="hint">The generator is paused while you choose.</p></div>
+</div>
+
+<aside id="log" class="drawer" role="dialog" aria-labelledby="log-title" hidden>
+  <div class="drawer-head"><h2 id="log-title">Explanation log</h2><button id="log-close" class="ghost" type="button">Close</button></div>
+  <p class="hint">Everything the team has explained so far. Select one to see it again on the machine.</p>
+  <div id="log-body"></div>
+</aside>
+
+<div id="ending" class="overlay" role="dialog" aria-modal="true" aria-labelledby="end-title" hidden>
+  <div class="modal end"><h2 id="end-title"></h2><p id="end-lead" class="lead"></p><ul id="end-recap"></ul>
+    <div class="intro-btns"><button id="end-continue" class="primary" type="button">Keep experimenting</button><button id="end-restart" class="ghost" type="button">Restart</button></div>
+    <p class="fine" id="end-credits"></p></div>
+</div>
+
+<div id="toast" class="toast" role="status" hidden></div>
+<div id="ghost" class="ghost-part" hidden></div>
+
+<script>
+/* ==========================================================================
+   sim.js — generator physics. No DOM, no game rules. Runs in browser and Node.
+   --------------------------------------------------------------------------
+   Lumped, cycle-averaged model of a small permanent-magnet alternator:
+
+     induced voltage (rms)   E   = k · ω            (k grows with magnet strength,
+                                                     turns, and iron-core coupling)
+     load current            I   = E / (r + R_ext)  (zero when the circuit is open)
+     opposing (Lenz) torque  τem = k · I            (so τem·ω = E·I: every electrical
+                                                     watt is paid for mechanically)
+     friction torque         τf  = c + b·ω
+     drive torque            τin = effort · τmax · (1 − ω/ω_free)   (a tiring arm:
+                                                     strong when slow, weak when fast)
+     rotor                   J · dω/dt = τin − τem − τf
+
+   Rooms are identical lamps wired in parallel: R_ext = R_room / n.
+   Units are SI and the values are plausible for a hand-cranked bench
+   generator, but this is a teaching model, not a design tool.
+   ========================================================================== */
+(function (root) {
+  'use strict';
+
+  var BASE = {
+    J: 0.06,          // rotor inertia, kg·m²
+    fricC: 0.28,      // constant bearing friction, N·m
+    fricB: 0.004,     // speed-dependent friction, N·m·s
+    tauMax: 4.55,     // stall torque of the hand drive at full effort, N·m (at the rotor)
+    omegaFree: 50,    // speed where the arm can no longer add torque, rad/s
+    k: 0.42,          // volts per rad/s with base magnet, base turns, iron cores in
+    r: 3.0,           // winding resistance, ohms
+    Rroom: 14.4,      // one room's lamp: 10 W at 12 V
+    Prated: 10,       // watts for a fully lit room
+    Vrated: 12,
+    noCore: 0.45      // coupling factor if the iron cores were left out
+  };
+
+  // Upgrade effects. Every one has a physical reason and none is free energy.
+  var UPG = {
+    turns:  { k: 1.35, r: 1.35 },          // more turns: more volts per speed, but more wire to heat
+    magnet: { k: 1.24 },                   // stronger field change at the same speed
+    loss:   { r: 0.78, fric: 0.5 }         // thicker wire + better bearings: less wasted as heat
+  };
+
+  function machine(upg, hasCore) {
+    upg = upg || {};
+    var m = { k: BASE.k, r: BASE.r, c: BASE.fricC, b: BASE.fricB };
+    if (hasCore === false) m.k *= BASE.noCore;
+    if (upg.turns)  { m.k *= UPG.turns.k;  m.r *= UPG.turns.r; }
+    if (upg.magnet) { m.k *= UPG.magnet.k; }
+    if (upg.loss)   { m.r *= UPG.loss.r;   m.c *= UPG.loss.fric; m.b *= UPG.loss.fric; }
+    return m;
+  }
+
+  // Electrical state at a given speed. nRooms = number of closed room switches;
+  // connected = both lead wires attached.
+  function electrical(m, omega, nRooms, connected) {
+    var E = m.k * omega, I = 0, V = E;
+    if (connected && nRooms > 0) {
+      var Rext = BASE.Rroom / nRooms;
+      I = E / (m.r + Rext);
+      V = I * Rext;
+    }
+    var perRoom = (connected && nRooms > 0) ? (V * V) / BASE.Rroom : 0;
+    return {
+      E: E, V: V, I: I,
+      tauEm: m.k * I,
+      pLoad: V * I,              // watts reaching the lamps
+      pWire: I * I * m.r,        // watts heating the windings
+      perRoom: perRoom,
+      brightness: perRoom / BASE.Prated
+    };
+  }
+
+  function driveTorque(effort, omega) {
+    return effort * BASE.tauMax * Math.max(0, 1 - omega / BASE.omegaFree);
+  }
+
+  // Advance the rotor by dt seconds. s = {omega, theta}. Returns a readout.
+  function step(s, m, effort, nRooms, connected, dt) {
+    var el = electrical(m, s.omega, nRooms, connected);
+    var tauIn = driveTorque(effort, s.omega);
+    var fric = s.omega > 0 ? m.c + m.b * s.omega : Math.min(m.c, tauIn);
+    var net = tauIn - el.tauEm - fric;
+    s.omega += (net / BASE.J) * dt;
+    if (s.omega < 0.02 && net <= 0) s.omega = 0;
+    if (s.omega < 0) s.omega = 0;
+    s.theta += s.omega * dt;
+    el.tauIn = tauIn; el.tauFric = fric;
+    el.pIn = tauIn * s.omega; el.pFric = fric * s.omega;
+    return el;
+  }
+
+  // Where the rotor settles for a constant effort (used for tuning and tests).
+  function steady(m, effort, nRooms, connected) {
+    var s = { omega: 0, theta: 0 }, out;
+    for (var i = 0; i < 6000; i++) out = step(s, m, effort, nRooms, connected, 1 / 200);
+    out.omega = s.omega;
+    return out;
+  }
+
+  var api = { BASE: BASE, UPG: UPG, machine: machine, electrical: electrical,
+              driveTorque: driveTorque, step: step, steady: steady,
+              rpm: function (w) { return w * 60 / (2 * Math.PI); } };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.Sim = api;
+})(typeof window !== 'undefined' ? window : this);
+
+</script>
+<script>
+/* ==========================================================================
+   content.js — ALL player-facing educational and story text lives here.
+   Edit wording in this file; no game logic depends on the sentences themselves.
+
+   BUBBLES: each entry is one explanation bubble.
+     id        unique key used by the progression rules in game.js
+     title     bubble heading
+     body      bubble text (no equations — course rule)
+     trigger   plain-language note of what makes it appear
+     anchor    id of the on-screen component the bubble points to
+     topic     group heading used by the explanation log
+     figure    optional small illustration drawn inside the bubble
+     source    'supplied' = group's bubble copy, used as written
+               'edited'   = supplied copy with a small change (see `note`)
+     log       false hides it from the explanation log (unused content)
+   "Seen" state is tracked at runtime in game state (g.seen), not here.
+   ========================================================================== */
+window.CONTENT = {
+
+  title: 'Lights Back On',
+  subtitle: 'A blackout, a box of parts, and one generator',
+  // Shown in the credits line of the ending card. Add group member names here.
+  team: '',
+
+  intro: [
+    '9:42 pm. The storm takes out the whole street.',
+    'No grid, no lights — but the garage has a magnet, copper wire, iron, and a crank.',
+    'The power is out. We have the parts. Let’s get the lights back on.'
+  ],
+
+  crewNames: ['Imani', 'Tobias', 'Wren'],
+
+  bubbles: [
+    { id: 'magnet', topic: 'Building the generator', anchor: 'a-rotor', source: 'supplied',
+      trigger: 'Place the permanent magnet',
+      title: 'No batteries required',
+      body: 'A fridge magnet can hold your shopping list all week without a battery. This magnet keeps its magnetic field too—but that alone won’t power our lights.' },
+    { id: 'poles', topic: 'Building the generator', anchor: 'a-rotor', source: 'supplied',
+      trigger: 'Inspect the N/S labels (tap the ⓘ by the magnet)',
+      title: 'Two ends, two poles',
+      body: 'These labels mark the magnet’s north and south poles. We’ll mount it so those poles sweep past the coils as it turns.' },
+    { id: 'winding', topic: 'Building the generator', anchor: 'a-coilL', source: 'supplied',
+      trigger: 'Finish winding the insulated wire',
+      title: 'Every wrap counts',
+      body: 'Wind the wire as you’d wind thread around a spool. Each wrap is a turn. Many turns together make a coil; this cylindrical winding is called a solenoid.' },
+    { id: 'coating', topic: 'Building the generator', anchor: 'a-coilR', source: 'supplied', figure: 'coating',
+      trigger: 'Inspect the wire coating (tap the ⓘ by the right coil)',
+      title: 'Close together, electrically separate',
+      body: 'The wire has a thin insulating coating. It lets us pack the turns tightly while keeping current from taking shortcuts between neighboring turns.' },
+    { id: 'core', topic: 'Building the generator', anchor: 'a-coreL', source: 'supplied', figure: 'bench',
+      trigger: 'Insert the soft iron cores',
+      title: 'More than a support',
+      body: 'This iron isn’t just holding the wire in place. It guides more of the magnet’s field through the winding, helping the coil produce voltage when that field changes.' },
+    { id: 'crank', topic: 'Building the generator', anchor: 'a-crank', source: 'supplied',
+      trigger: 'Attach the crank',
+      title: 'You’re the power station',
+      body: 'For now, your hand supplies the energy. Turning the crank does mechanical work, which the generator can convert into electrical energy.' },
+
+    { id: 'induction', topic: 'Making voltage', anchor: 'a-coilL', source: 'supplied',
+      trigger: 'Spin the magnet until the meter responds',
+      title: 'Something is changing',
+      body: 'The turning magnet changes the magnetic field passing through the coil’s loops. That produces a voltage between the wire’s ends. This process is electromagnetic induction.' },
+    { id: 'faster', topic: 'Making voltage', anchor: 'a-meter', source: 'supplied',
+      trigger: 'Crank harder so the rotor speeds up',
+      title: 'Same machine, faster motion',
+      body: 'Faster rotation makes the field through the coil change more quickly. With the same winding and magnet, the induced voltage rises.' },
+    { id: 'stopped', topic: 'Making voltage', anchor: 'a-meter', source: 'supplied',
+      trigger: 'Let the rotor coast to a stop',
+      title: 'Still magnetic. No output.',
+      body: 'The magnet hasn’t lost its magnetism. The field through the coil has simply stopped changing. A stronger stationary magnet wouldn’t solve that—we need the change.' },
+    { id: 'waveform', topic: 'Making voltage', anchor: 'a-scope', source: 'supplied',
+      trigger: 'Inspect the voltage trace (tap the ⓘ on the small screen)',
+      title: 'Taking turns in each direction',
+      body: 'As the north and south poles trade places, the voltage reverses polarity. With the circuit connected, current reverses too. That’s alternating current, or AC.' },
+
+    { id: 'circuit', topic: 'Circuits and loads', anchor: 'a-terminals', source: 'edited',
+      note: 'Added “and the room’s switch closed” because in this game the room switch is a separate step from attaching the two leads.',
+      trigger: 'Connect both lead wires',
+      title: 'Finish the connection',
+      body: 'The meter showed voltage, but the bulb needs a complete circuit. With both connections made—and the room’s switch closed—current can flow through the bulb and return through the generator.' },
+    { id: 'load', topic: 'Circuits and loads', anchor: 'room-0', source: 'supplied',
+      trigger: 'Light the first room',
+      title: 'Somewhere for the energy to go',
+      body: 'The bulb is our first electrical load. It turns electrical energy into light and heat. Keeping the room lit means continually delivering more energy.' },
+
+    { id: 'heavier', topic: 'Load and Lenz’s law', anchor: 'a-crank', source: 'supplied',
+      trigger: 'Connect a second room and keep cranking',
+      title: 'The crank feels heavier',
+      body: 'Think of turning up the resistance on an exercise bike. Keeping the same speed now takes more effort. Here, the extra effort is needed to supply another room.' },
+    { id: 'lenz', topic: 'Load and Lenz’s law', anchor: 'a-coilR', source: 'supplied',
+      trigger: 'The opposing-rotation arrow appears while two rooms draw current',
+      title: 'Where does that extra drag come from?',
+      body: 'Current in the coils produces a magnetic field of its own. Its interaction with the spinning magnet resists the driving motion. That’s Lenz’s law showing up at the crank.' },
+    { id: 'balance', topic: 'Load and Lenz’s law', anchor: 'effort-box', source: 'supplied',
+      trigger: 'Offered once the drag has been explained',
+      title: 'Balance the demand',
+      body: 'Keep both rooms connected and supply more turning effort, or switch one off. If demand exceeds what your input can support, the rotor slows and the lights dim.' },
+
+    { id: 'turns', topic: 'Upgrades', anchor: 'a-coilL', source: 'supplied', figure: 'bench',
+      trigger: 'Buy the extra wire turns',
+      title: 'Upgrade the winding',
+      body: 'Compare it at the same speed: more turns can produce a higher voltage. The extra wire isn’t an energy source, though. More electrical output still needs more mechanical input.' },
+    { id: 'strongmagnet', topic: 'Upgrades', anchor: 'a-rotor', source: 'supplied', figure: 'bench',
+      trigger: 'Buy the stronger magnet',
+      title: 'A stronger magnetic change',
+      body: 'At the same rotation speed, a stronger magnet can produce a higher voltage. It changes how the generator performs; it doesn’t replace the work needed to drive it.' },
+    { id: 'efficiency', topic: 'Upgrades', anchor: 'power-box', source: 'supplied', figure: 'bench',
+      trigger: 'Buy the low-loss kit',
+      title: 'Why doesn’t everything reach the lights?',
+      body: 'Some of your input warms the wires through electrical resistance. Friction also warms moving parts. Better components can reduce those losses, leaving more energy available for the rooms.' },
+    { id: 'wind', topic: 'Upgrades', anchor: 'a-crank', source: 'supplied',
+      trigger: 'Mount the wind turbine (after the ending)',
+      title: 'Someone else does the turning',
+      body: 'You can rest your arm now. Moving water—or wind—supplies the mechanical work. The generator still needs energy; it’s just getting it from somewhere else.' },
+
+    // Supplied copy for a feature that is not in this build (no gearbox). Kept for future use.
+    { id: 'gear', topic: 'Upgrades', anchor: 'a-crank', source: 'supplied', log: false,
+      trigger: 'Select a gear ratio (not implemented)',
+      title: 'Fewer crank turns—with a catch',
+      body: 'This gear setting spins the rotor farther with each crank revolution. Under load, the crank also becomes harder to turn. You’re trading turning force for speed.' }
+  ],
+
+  // Objective line shown at the top, by stage.
+  objectives: {
+    assemble: 'Build the generator: move each part from the tray onto the workbench.',
+    winding:  'Wind the wire onto the coil forms.',
+    spin:     'Turn the crank and watch the voltmeter. Nothing is connected to the house yet.',
+    faster:   'Crank harder. What happens to the voltage?',
+    stop:     'Now let go and let the rotor coast to a stop.',
+    wire:     'Run both lead wires from the generator’s terminals to the house.',
+    light:    'Close the living-room switch, then crank to light it.',
+    second:   'The kitchen is next. Flip its switch while you keep cranking.',
+    balance:  'Get the living room and kitchen both steadily lit.',
+    final:    'Last one: light all three rooms, and hold them steady.',
+    done:     'Lights restored. The bench is yours — keep experimenting.'
+  },
+
+  // Short team reactions. Not physics explanations; those are the bubbles above.
+  crew: {
+    start:        ['Imani', 'Parts are on the tray. Drag one over, or tap it and then tap where it goes.'],
+    magnetIn:     ['Wren', 'Magnet’s on the shaft. It can swing its ends right past the coil forms.'],
+    wireStart:    ['Imani', 'Hold the Wind button. I’ll wind the other coil in step with you.'],
+    wound:        ['Imani', 'Two coils, joined so their voltages add instead of cancelling.'],
+    coreIn:       ['Tobias', 'Iron’s in. It stays put with the coils — only the magnet turns.'],
+    crankIn:      ['Tobias', 'Belt’s on. One turn of the handle spins the magnet several times.'],
+    built:        ['Wren', 'That’s a generator. Give the crank a few pushes.'],
+    firstVolts:   ['Wren', 'The needle moved! And the house isn’t even hooked up.'],
+    coast:        ['Tobias', 'Hands off. Watch the needle on the way down.'],
+    oneWire:      ['Imani', 'One wire is only half a path. Run the second one.'],
+    wired:        ['Imani', 'Both leads are on. The living-room switch is live.'],
+    openSpin:     ['Wren', 'Volts on the meter, but the switch is open. Nothing can flow yet.'],
+    firstLight:   ['Wren', 'Living room’s lit!'],
+    predictRight: ['Tobias', 'Called it. More to supply, more to push.'],
+    predictWrong: ['Tobias', 'Not this time — it took more push, not less. Now you’ve felt why.'],
+    shed:         ['Imani', 'Switched one off and the crank eased up straight away. Demand works both ways.'],
+    twoSteady:    ['Wren', 'Two rooms, steady. Supplies are in — spend them on the machine.'],
+    thirdOpen:    ['Tobias', 'The bedroom’s wired in. Whenever you’re ready.'],
+    challenge:    ['Tobias', 'Another room needs lighting, but the rotor is slowing. What can you change?'],
+    close:        ['Imani', 'So close. A lot of your work is still leaving as heat — any supplies left?'],
+    overbright:   ['Wren', 'Easy! That’s more than the lamp needs. You can back off.'],
+    upgraded:     ['Imani', 'Fitted. Same crank, different machine — try it.'],
+    noSupplies:   ['Imani', 'Not enough supplies for that yet. Discoveries earn more.'],
+    windOn:       ['Wren', 'Turbine’s catching the storm. Watch the lights follow the gusts.'],
+    windOff:      ['Wren', 'Back to arm power.'],
+    done:         ['Wren', 'Every room lit. Nice work, power station.']
+  },
+
+  // Friendly corrections for a part dropped in the wrong place.
+  misplace: {
+    magnet: 'The magnet goes on the rotor shaft, in the gap between the two coil forms. It has to be free to turn.',
+    wire:   'The copper wire wraps around the two coil forms on either side of the rotor.',
+    core:   'The iron cores slide inside the coil forms. They stay still with the coils.',
+    crank:  'The crank mounts on the drive wheel below the rotor, where the belt runs.',
+    lead:   'Each lead wire runs from one output terminal out to the house.',
+    taken:  'That spot already has its part.'
+  },
+
+  parts: {
+    magnet: { name: 'Bar magnet',   hint: 'permanent, N and S poles' },
+    wire:   { name: 'Copper wire',  hint: 'insulated, one long spool' },
+    core:   { name: 'Iron cores',   hint: 'soft iron, a pair' },
+    crank:  { name: 'Crank & belt', hint: 'your mechanical input' },
+    lead:   { name: 'Lead wire',    hint: 'generator to house' }
+  },
+
+  rooms: ['Living room', 'Kitchen', 'Bedroom'],
+
+  prediction: {
+    title: 'Before you flip it — a prediction',
+    question: 'The living room is lit. If the kitchen is connected too and you want to keep the rotor at the same speed, the crank will need…',
+    options: [
+      { id: 'less', label: 'Less effort — the current is shared' },
+      { id: 'same', label: 'About the same effort' },
+      { id: 'more', label: 'More effort' }
+    ],
+    after: 'Now flip the switch and feel what happens.'
+  },
+
+  upgrades: {
+    turns:  { name: 'More wire turns', cost: 3,
+              blurb: 'Higher voltage at the same speed. More wire also means more resistance to heat up.' },
+    magnet: { name: 'Stronger magnet', cost: 3,
+              blurb: 'A stronger field sweeping past the coils. Higher voltage at the same speed.' },
+    loss:   { name: 'Low-loss kit', cost: 3,
+              blurb: 'Thicker wire and smoother bearings. Less of your work leaves as heat.' },
+    wind:   { name: 'Wind turbine', cost: 0,
+              blurb: 'Let the storm do the turning. Unlocked after the lights are restored.' }
+  },
+
+  status: {
+    unbuilt:  'Generator not assembled',
+    stopped:  'Rotor stopped — no changing field, no voltage',
+    open:     'Circuit open — voltage, but no current',
+    noRooms:  'All switches open — spinning freely',
+    more:     'More input needed — lights are dim',
+    stable:   'Lighting stable',
+    bright:   'Brighter than the lamps need',
+    paused:   'Paused while you read'
+  },
+
+  ending: {
+    title: 'Lights back on.',
+    lead: 'Three rooms, one generator, and every watt of it came through the crank.',
+    recap: {
+      built:   'You built a generator from a magnet, two coils, iron cores and a crank.',
+      open:    'With nothing connected you still read {v} volts — spinning made voltage, but no current flowed until the circuit was complete.',
+      stopped: 'When the rotor stopped, the voltage vanished even though the magnet was as strong as ever. The change is what matters.',
+      load:    'Each room you switched on made the rotor harder to turn. That drag is the coils’ own magnetism pushing back — Lenz’s law — and it is how your work gets into the wires.',
+      predictRight: 'You predicted that a second room would take more effort, then proved it.',
+      predictWrong: 'You guessed a second room would not take more effort — and the crank showed you otherwise.',
+      upgrades: 'Your upgrades ({list}) changed how well the machine used your effort. None of them made energy.',
+      budget:  'At the end you were putting in about {pin} W; {pload} W reached the lamps and the rest left as heat.'
+    },
+    credits: 'All artwork and sound in this game are drawn and synthesised in code for this project. No external images, music or sound files are used.'
+  }
+};
+
+</script>
+<script>
+/* ==========================================================================
+   game.js — state, progression rules, input, rendering.
+   Physics lives in sim.js. All wording lives in content.js.
+   Sections: state · helpers · audio · bubbles · progression · assembly ·
+             controls · rooms & upgrades · render · intro/ending · boot
+   ========================================================================== */
+(function () {
+  'use strict';
+  var C = window.CONTENT, S = window.Sim;
+  var $ = function (id) { return document.getElementById(id); };
+  var NS = 'http://www.w3.org/2000/svg';
+  var BUB = {}; C.bubbles.forEach(function (b) { BUB[b.id] = b; });
+  var REDUCED = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var VIS = 0.25;                 // rotation is drawn at a quarter of real speed
+  var H = 1 / 120;                // fixed simulation step, seconds
+  var STAGES = ['intro', 'assemble', 'spin', 'faster', 'stop', 'wire', 'light', 'second', 'balance', 'final', 'done'];
+  var LIT = 0.8;                  // a room counts as lit at 80 % of rated power
+  var REF_W = 300 * 2 * Math.PI / 60; // bench-test speed for same-speed comparisons
+
+  /* ------------------------------ state ------------------------------ */
+  function freshState() {
+    return {
+      stage: 'intro',
+      placed: { magnet: false, wire: false, core: false, crank: false },
+      leads: 0, leadAt: {}, wind: 0, winding: false, windHold: false,
+      seen: {}, order: [], supplies: 0,
+      upg: { turns: false, magnet: false, loss: false }, windDrive: false,
+      rooms: [false, false, false], roomOpen: [false, false, false], disp: [0, 0, 0],
+      effort: 0, holding: false, latch: false, level: 0.5,
+      rot: { omega: 0, theta: 0 }, vis: 0, out: null, t: 0,
+      flags: {}, timers: {}, prediction: null, peakOpenV: 0, selected: null,
+      ended: false, bench: {}, endStats: null
+    };
+  }
+  var g = freshState();
+  var queue = [], cur = null, lastFocus = null;
+  var modal = { intro: true, predict: false, ending: false, log: false };
+  var mach = S.machine(g.upg, true);
+
+  /* ----------------------------- helpers ----------------------------- */
+  function el(name, attrs, parent) {
+    var e = document.createElementNS(NS, name);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function hid(e, v) { e.toggleAttribute('hidden', !!v); }   // works for SVG as well as HTML
+  function clamp(v, a, b) { return v < a ? a : v > b ? b : v; }
+  function rank(s) { return STAGES.indexOf(s); }
+  function atLeast(s) { return rank(g.stage) >= rank(s); }
+  function built() { return g.placed.magnet && g.placed.wire && g.placed.core && g.placed.crank && g.wind >= 12; }
+  function roomsOn() { return g.rooms.filter(Boolean).length; }
+  function paused() { return !!cur || modal.intro || modal.predict || modal.ending || modal.log; }
+  function fmt(s, o) { return s.replace(/\{(\w+)\}/g, function (_, k) { return o[k]; }); }
+
+  var toastTimer = 0;
+  function toast(msg) {
+    var t = $('toast'); t.textContent = msg; t.hidden = false;
+    clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.hidden = true; }, 3600);
+  }
+  function crew(key) {
+    var line = C.crew[key]; if (!line) return;
+    var c = $('crew');
+    c.querySelector('.who').textContent = line[0] + ':';
+    c.querySelector('.say').textContent = line[1];
+    c.classList.remove('pop'); void c.offsetWidth; c.classList.add('pop');
+  }
+  function award(n) {
+    g.supplies += n;
+    var b = $('supplies-box'); b.hidden = false; $('supplies').textContent = g.supplies;
+    b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump');
+    Audio.chime(660, 880);
+    renderShop();
+  }
+
+  /* ------------------------------ audio ------------------------------ */
+  // Everything is synthesised; there are no audio files.
+  var Audio = (function () {
+    var ctx = null, master = null, hum = null, humGain = null, muted = false;
+    function noise(sec) {
+      var b = ctx.createBuffer(1, ctx.sampleRate * sec, ctx.sampleRate), d = b.getChannelData(0);
+      for (var i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      return b;
+    }
+    function init() {
+      if (ctx) { if (ctx.state === 'suspended') ctx.resume(); return; }
+      try {
+        var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+        ctx = new AC(); master = ctx.createGain(); master.gain.value = muted ? 0 : 1; master.connect(ctx.destination);
+        var rain = ctx.createBufferSource(); rain.buffer = noise(2); rain.loop = true;
+        var f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1800; f.Q.value = 0.4;
+        var rg = ctx.createGain(); rg.gain.value = 0.035; rain.connect(f); f.connect(rg); rg.connect(master); rain.start();
+        hum = ctx.createOscillator(); hum.type = 'triangle'; hum.frequency.value = 40;
+        humGain = ctx.createGain(); humGain.gain.value = 0; hum.connect(humGain); humGain.connect(master); hum.start();
+      } catch (e) { ctx = null; }
+    }
+    function burst(dur, freq, gain) {
+      if (!ctx) return;
+      var s = ctx.createBufferSource(); s.buffer = noise(dur);
+      var f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = freq;
+      var gn = ctx.createGain(); gn.gain.setValueAtTime(gain, ctx.currentTime);
+      gn.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+      s.connect(f); f.connect(gn); gn.connect(master); s.start();
+    }
+    function tone(freq, t0, dur, gain) {
+      var o = ctx.createOscillator(), gn = ctx.createGain(); o.type = 'sine'; o.frequency.value = freq;
+      gn.gain.setValueAtTime(0.0001, ctx.currentTime + t0);
+      gn.gain.exponentialRampToValueAtTime(gain, ctx.currentTime + t0 + 0.02);
+      gn.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + t0 + dur);
+      o.connect(gn); gn.connect(master); o.start(ctx.currentTime + t0); o.stop(ctx.currentTime + t0 + dur + 0.05);
+    }
+    return {
+      init: init,
+      tick: function () { burst(0.05, 2400, 0.12); },
+      thunder: function () { burst(1.8, 180, 0.5); },
+      chime: function (a, b) { if (!ctx) return; tone(a, 0, 0.25, 0.08); tone(b, 0.12, 0.35, 0.08); },
+      fanfare: function () { if (!ctx) return; [523, 659, 784, 1047].forEach(function (f, i) { tone(f, i * 0.14, 0.5, 0.09); }); },
+      setHum: function (omega) {
+        if (!ctx) return;
+        hum.frequency.value = 36 + omega * 2.2;
+        humGain.gain.value = paused() ? 0 : clamp(omega / 50, 0, 1) * 0.03;
+      },
+      toggle: function () { muted = !muted; if (master) master.gain.value = muted ? 0 : 1; return muted; }
+    };
+  })();
+
+  /* ----------------------------- bubbles ----------------------------- */
+  // show(id, after): queue an explanation. The simulation holds still while
+  // any bubble is open. `after` runs once, when the bubble is dismissed.
+  function show(id, after) { queue.push({ id: id, after: after }); if (!cur) nextBubble(); }
+  function nextBubble() {
+    var q = queue.shift(); if (!q) return;
+    cur = q; g.holding = false; g.windHold = false;
+    var b = BUB[q.id];
+    if (!lastFocus) lastFocus = document.activeElement;
+    $('bubble-topic').textContent = b.topic;
+    $('bubble-title').textContent = b.title;
+    $('bubble-body').textContent = b.body;
+    $('bubble-fig').innerHTML = figure(b);
+    $('bubble-pause').textContent = built() ? C.status.paused : '';
+    $('bubble').hidden = false; $('ring').hidden = false;
+    var a = $(b.anchor);
+    if (a && a.scrollIntoView && window.innerHeight < 700) a.scrollIntoView({ block: 'center' });
+    positionBubble();
+    $('bubble-ok').focus({ preventScroll: true });
+  }
+  function closeBubble() {
+    if (!cur) return;
+    var q = cur; cur = null;
+    if (!g.seen[q.id]) { g.seen[q.id] = true; g.order.push(q.id); }
+    $('bubble').hidden = true; $('ring').hidden = true;
+    if (q.after) q.after();
+    if (!cur) {
+      if (queue.length) nextBubble();
+      else {
+        if (lastFocus && document.contains(lastFocus) && !lastFocus.disabled) lastFocus.focus({ preventScroll: true });
+        lastFocus = null;
+        checkBuilt();
+      }
+    }
+    syncUI();
+  }
+  function positionBubble() {
+    if (!cur) return;
+    var b = BUB[cur.id], a = $(b.anchor), bub = $('bubble'), ring = $('ring'), arrow = $('b-arrow');
+    var vw = window.innerWidth, vh = window.innerHeight, m = 12, gap = 20;
+    var r = a ? a.getBoundingClientRect() : null;
+    if (!r || (r.width === 0 && r.height === 0)) r = { left: vw / 2 - 1, right: vw / 2 + 1, top: vh / 2 - 1, bottom: vh / 2 + 1, width: 2, height: 2 };
+    ring.style.left = (r.left - 7) + 'px'; ring.style.top = (r.top - 7) + 'px';
+    ring.style.width = (r.width + 14) + 'px'; ring.style.height = (r.height + 14) + 'px';
+    var bw = bub.offsetWidth, bh = bub.offsetHeight, cx = r.left + r.width / 2, cy = r.top + r.height / 2, x, y, side;
+    if (vw < 720) {            // small screens: sheet at whichever end is away from the component
+      side = 'none'; x = (vw - bw) / 2; y = cy > vh / 2 ? m : vh - bh - m;
+    } else if (r.right + gap + bw <= vw - m) { side = 'right'; x = r.right + gap; y = cy - bh / 2; }
+    else if (r.left - gap - bw >= m) { side = 'left'; x = r.left - gap - bw; y = cy - bh / 2; }
+    else if (r.top - gap - bh >= m) { side = 'top'; x = cx - bw / 2; y = r.top - gap - bh; }
+    else { side = 'bottom'; x = cx - bw / 2; y = Math.min(r.bottom + gap, vh - bh - m); }
+    x = clamp(x, m, vw - bw - m); y = clamp(y, m, vh - bh - m);
+    bub.style.left = x + 'px'; bub.style.top = y + 'px';
+    arrow.style.display = side === 'none' ? 'none' : 'block';
+    if (side === 'right' || side === 'left') {
+      arrow.style.top = clamp(cy - y - 8, 14, bh - 30) + 'px';
+      arrow.style.left = side === 'right' ? '-7px' : (bw - 9) + 'px';
+    } else {
+      arrow.style.left = clamp(cx - x - 8, 14, bw - 30) + 'px';
+      arrow.style.top = side === 'bottom' ? '-7px' : (bh - 9) + 'px';
+    }
+  }
+  function figure(b) {
+    if (b.figure === 'coating') {
+      return '<div class="fig"><div class="cap">Close-up of neighbouring turns</div>' +
+        '<svg viewBox="0 0 240 70" aria-hidden="true"><g>' +
+        [40, 96, 152].map(function (x) { return '<circle cx="' + x + '" cy="34" r="27" fill="#4d7a9c"/><circle cx="' + x + '" cy="34" r="21" fill="#d9824a"/>'; }).join('') +
+        '</g><text x="206" y="24" font-size="11" font-weight="700" fill="#4d7a9c">coating</text>' +
+        '<text x="206" y="46" font-size="11" font-weight="700" fill="#a85a24">copper</text></svg></div>';
+    }
+    if (b.figure === 'bench' && g.bench[b.id]) {
+      var f = g.bench[b.id];
+      return '<div class="fig"><div class="cap">' + f.cap + '</div>' + f.rows.map(function (r) {
+        return '<div class="r ' + (r.after ? 'after' : '') + '"><span>' + r.label + '</span><div><i style="width:' +
+          clamp(r.v / f.max * 100, 2, 100) + '%"></i></div><b>' + r.v.toFixed(1) + ' ' + f.unit + '</b></div>';
+      }).join('') + (f.note ? '<div style="margin-top:5px">' + f.note + '</div>' : '') + '</div>';
+    }
+    return '';
+  }
+  function inspect(id) {
+    if (cur) return;
+    if (!g.seen[id]) award(1);
+    show(id);
+  }
+
+  /* --------------------------- progression --------------------------- */
+  // The whole tutorial order is here. Called once per simulation step.
+  function setStage(s) { g.stage = s; g.timers = {}; syncUI(); }
+  function openRoom(i) { g.roomOpen[i] = true; syncUI(); }
+
+  function progress(dt) {
+    var o = g.out, T = g.timers, f = g.flags, n = roomsOn();
+    if (g.leads < 2 && o.E > g.peakOpenV) g.peakOpenV = o.E;
+    switch (g.stage) {
+      case 'spin':        // first voltage with nothing connected
+        if (o.E > 3) { T.a = (T.a || 0) + dt; if (T.a > 0.5) { award(1); crew('firstVolts'); show('induction', function () { setStage('faster'); }); } }
+        break;
+      case 'faster':      // same machine, faster motion
+        if (o.E > 12) { T.a = (T.a || 0) + dt; if (T.a > 0.4) { award(1); show('faster', function () { g.latch = false; $('latch').checked = false; g.effort = 0; crew('coast'); setStage('stop'); }); } } else T.a = 0;
+        break;
+      case 'stop':        // stationary magnet: no output
+        if (g.rot.omega < 0.05) { award(1); show('stopped', function () { setStage('wire'); }); }
+        break;
+      case 'light':       // complete circuit lights the first room
+        if (g.rooms[0] && o.brightness > 0.5) { T.a = (T.a || 0) + dt; if (T.a > 0.6) { award(1); crew('firstLight'); show('load', function () { openRoom(1); setStage('second'); }); } }
+        else if (!g.rooms[0] && o.E > 4 && !f.openSpin) { f.openSpin = true; crew('openSpin'); }
+        break;
+      case 'second':      // added load -> heavier crank -> Lenz -> choice
+        if (n >= 2 && o.I > 0.05) {
+          if (!g.seen.heavier) {
+            T.a = (T.a || 0) + dt;
+            if (T.a > 2.2) { award(1); show('heavier', function () { f.arrow = true; crew(g.prediction === 'more' ? 'predictRight' : 'predictWrong'); }); }
+          } else if (!g.seen.lenz) {
+            T.b = (T.b || 0) + dt;
+            if (T.b > 2.2) { award(1); show('lenz', function () { f.slider = true; syncUI(); show('balance', function () { f.shop = true; setStage('balance'); }); }); }
+          }
+        }
+        break;
+      case 'balance':     // two rooms held steady
+        if (g.rooms[0] && g.rooms[1] && o.brightness >= LIT) { T.a = (T.a || 0) + dt; if (T.a > 2.5) { award(2); crew('twoSteady'); openRoom(2); setStage('final'); setTimeout(function () { if (g.stage === 'final' && !g.rooms[2]) crew('thirdOpen'); }, 3500); } } else T.a = 0;
+        break;
+      case 'final':       // final challenge: all three, steady
+        if (n === 3) {
+          if (o.brightness >= LIT) { T.a = (T.a || 0) + dt; if (T.a > 3.5) finish(); }
+          else {
+            T.a = 0; T.b = (T.b || 0) + dt;
+            if (T.b > 3 && !f.challenge) { f.challenge = true; award(1); crew('challenge'); }
+            if (T.b > 14 && o.brightness > 0.68 && !f.close) { f.close = true; crew('close'); }
+          }
+        }
+        break;
+    }
+    if (n > 0 && o.brightness > 1.7 && atLeast('second')) { T.ob = (T.ob || 0) + dt; if (T.ob > 2 && !f.overbright) { f.overbright = true; crew('overbright'); } }
+  }
+
+  function finish() {
+    var o = g.out;
+    g.ended = true;
+    g.endStats = { pin: Math.round(o.pIn), pload: Math.round(o.pLoad) };
+    setStage('done'); crew('done'); Audio.fanfare();
+    var R = C.ending.recap, items = [R.built];
+    items.push(fmt(R.open, { v: g.peakOpenV.toFixed(0) }));
+    items.push(R.stopped, R.load);
+    items.push(g.prediction === 'more' ? R.predictRight : R.predictWrong);
+    var ups = Object.keys(g.upg).filter(function (k) { return g.upg[k]; }).map(function (k) { return C.upgrades[k].name.toLowerCase(); });
+    if (ups.length) items.push(fmt(R.upgrades, { list: ups.join(', ') }));
+    items.push(fmt(R.budget, g.endStats));
+    $('end-title').textContent = C.ending.title;
+    $('end-lead').textContent = C.ending.lead;
+    $('end-recap').innerHTML = items.map(function (t) { return '<li>' + t + '</li>'; }).join('');
+    $('end-credits').textContent = (C.team ? 'Made by ' + C.team + '. ' : '') + C.ending.credits;
+    modal.ending = true; $('ending').hidden = false; $('end-continue').focus();
+  }
+
+  /* ----------------------------- assembly ---------------------------- */
+  var ICON = {
+    magnet: '<svg viewBox="0 0 64 30"><rect x="6" y="8" width="26" height="14" fill="#e2574c"/><rect x="32" y="8" width="26" height="14" fill="#3f86e0"/><text x="19" y="19" font-size="11" font-weight="800" fill="#fff" text-anchor="middle">N</text><text x="45" y="19" font-size="11" font-weight="800" fill="#fff" text-anchor="middle">S</text></svg>',
+    wire: '<svg viewBox="0 0 64 30"><rect x="16" y="4" width="32" height="22" rx="4" fill="#d9824a"/><path d="M20 4v22M26 4v22M32 4v22M38 4v22M44 4v22" stroke="#8d4519" stroke-width="1.5"/><rect x="12" y="2" width="5" height="26" fill="#56628c"/><rect x="47" y="2" width="5" height="26" fill="#56628c"/></svg>',
+    core: '<svg viewBox="0 0 64 30"><rect x="6" y="5" width="52" height="8" rx="2" fill="#aeb6c2"/><rect x="6" y="17" width="52" height="8" rx="2" fill="#8e97a6"/></svg>',
+    crank: '<svg viewBox="0 0 64 30"><circle cx="32" cy="15" r="12" fill="#2c3657" stroke="#aeb8d4" stroke-width="3"/><circle cx="40" cy="15" r="4" fill="#ffbe55"/></svg>',
+    lead: '<svg viewBox="0 0 64 30"><path d="M6 15h52" stroke="#d9824a" stroke-width="4" stroke-linecap="round"/><circle cx="6" cy="15" r="4" fill="#c9a24b"/><circle cx="58" cy="15" r="4" fill="#c9a24b"/></svg>'
+  };
+  function trayParts() {
+    if (g.stage === 'assemble') return ['magnet', 'wire', 'core', 'crank'].filter(function (p) { return !g.placed[p]; });
+    if (g.stage === 'wire') { var a = []; for (var i = g.leads; i < 2; i++) a.push('lead'); return a; }
+    return [];
+  }
+  function renderTray() {
+    var t = $('tray'), parts = trayParts(), html = '';
+    parts.forEach(function (p, i) {
+      html += '<button type="button" class="part' + (g.selected === p ? ' sel' : '') + '" data-part="' + p + '" data-i="' + i + '" aria-pressed="' + (g.selected === p) + '">' +
+        ICON[p] + '<b>' + C.parts[p].name + '</b><small>' + C.parts[p].hint + '</small></button>';
+    });
+    if (g.winding) html += '<button type="button" class="windbtn" id="windbtn"><i style="width:' + (g.wind / 12 * 100) + '%"></i><span>Wind the wire — click or hold</span></button>';
+    if (!html && g.stage === 'assemble') html = '<p class="hint">All parts are on the bench.</p>';
+    t.innerHTML = html;
+  }
+  function select(part) {
+    g.selected = g.selected === part ? null : part;
+    renderTray(); markZones(g.selected);
+    if (g.selected) toast('Now choose where the ' + C.parts[g.selected].name.toLowerCase() + ' goes on the bench.');
+  }
+  function zoneFree(z, part) {
+    var name = z.getAttribute('data-zone');
+    if (z.getAttribute('data-accept').split(' ').indexOf(part) < 0) return false;
+    if (part === 'lead') return !g.leadAt[name];
+    return !g.placed[part];
+  }
+  function markZones(part) {
+    var svg = $('gen'); svg.classList.toggle('placing', !!part);
+    Array.prototype.forEach.call(svg.querySelectorAll('.zone'), function (z) {
+      var hot = !!part && zoneFree(z, part);
+      z.classList.toggle('hot', hot); z.classList.remove('over');
+      if (hot) z.setAttribute('tabindex', '0'); else z.removeAttribute('tabindex');
+    });
+  }
+  function place(part, zoneEl) {
+    var zone = zoneEl.getAttribute('data-zone'), accept = zoneEl.getAttribute('data-accept').split(' ');
+    if (accept.indexOf(part) < 0) { toast(C.misplace[part]); return false; }
+    if (!zoneFree(zoneEl, part)) { toast(C.misplace.taken); return false; }
+    g.selected = null; markZones(null); Audio.tick();
+    if (part === 'magnet') { g.placed.magnet = true; crew('magnetIn'); show('magnet'); }
+    else if (part === 'wire') { g.placed.wire = true; g.winding = true; crew('wireStart'); }
+    else if (part === 'core') {
+      g.placed.core = true; crew('coreIn');
+      g.bench.core = { cap: 'Bench test · same speed, nothing connected', unit: 'V', max: S.BASE.k * REF_W,
+        rows: [{ label: 'without iron', v: S.BASE.k * S.BASE.noCore * REF_W }, { label: 'with iron', v: S.BASE.k * REF_W, after: true }] };
+      show('core');
+    }
+    else if (part === 'crank') { g.placed.crank = true; crew('crankIn'); show('crank'); }
+    else if (part === 'lead') {
+      g.leadAt[zone] = true; g.leads++;
+      if (g.leads === 1) crew('oneWire');
+      else { crew('wired'); show('circuit', function () { openRoom(0); setStage('light'); }); }
+    }
+    syncUI();
+    if (g.winding) { var w = $('windbtn'); if (w) w.focus(); }
+    return true;
+  }
+  function addWind(n) {
+    if (!g.winding) return;
+    g.wind = Math.min(12, g.wind + n); renderTurns();
+    var bar = document.querySelector('#windbtn i'); if (bar) bar.style.width = (g.wind / 12 * 100) + '%';
+    if (g.wind >= 12) { g.winding = false; g.windHold = false; crew('wound'); syncUI(); show('winding'); }
+  }
+  function checkBuilt() {
+    if (g.stage === 'assemble' && built() && !cur) { setStage('spin'); crew('built'); $('crank-btn').focus({ preventScroll: true }); }
+  }
+
+  // drag-and-drop with a click/keyboard alternative
+  var drag = null;
+  function bindTray() {
+    var tray = $('tray'), ghost = $('ghost'), suppress = false;
+    tray.addEventListener('pointerdown', function (e) {
+      var w = e.target.closest('#windbtn'); if (w) { g.windHold = true; return; }
+      var b = e.target.closest('[data-part]'); if (!b) return;
+      drag = { part: b.getAttribute('data-part'), x: e.clientX, y: e.clientY, moved: false, id: e.pointerId };
+    });
+    window.addEventListener('pointermove', function (e) {
+      if (!drag || e.pointerId !== drag.id) return;
+      if (!drag.moved && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 7) {
+        drag.moved = true; ghost.textContent = C.parts[drag.part].name; ghost.hidden = false; markZones(drag.part);
+      }
+      if (drag.moved) {
+        ghost.style.left = e.clientX + 'px'; ghost.style.top = e.clientY + 'px';
+        var under = document.elementFromPoint(e.clientX, e.clientY), z = under && under.closest('.zone');
+        Array.prototype.forEach.call(document.querySelectorAll('.zone.over'), function (q) { q.classList.remove('over'); });
+        if (z && z.classList.contains('hot')) z.classList.add('over');
+        e.preventDefault();
+      }
+    }, { passive: false });
+    function end(e) {
+      g.windHold = false;
+      if (!drag || e.pointerId !== drag.id) return;
+      var d = drag; drag = null; ghost.hidden = true;
+      if (!d.moved) return;                       // a plain click: handled by 'click'
+      suppress = true; setTimeout(function () { suppress = false; }, 0);
+      var under = document.elementFromPoint(e.clientX, e.clientY), z = under && under.closest('.zone');
+      if (z) { if (!place(d.part, z)) markZones(g.selected); }
+      else { markZones(g.selected); if (under && under.closest('#gen')) toast(C.misplace[d.part]); }
+    }
+    window.addEventListener('pointerup', end); window.addEventListener('pointercancel', end);
+    tray.addEventListener('click', function (e) {
+      if (suppress) return;
+      if (e.target.closest('#windbtn')) { addWind(2); return; }
+      var b = e.target.closest('[data-part]'); if (b) select(b.getAttribute('data-part'));
+    });
+    var zones = $('zones');
+    zones.addEventListener('click', function (e) { var z = e.target.closest('.zone'); if (z && g.selected) place(g.selected, z); });
+    zones.addEventListener('keydown', function (e) {
+      if ((e.key === 'Enter' || e.key === ' ') && g.selected) { e.preventDefault(); place(g.selected, e.target); }
+    });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && g.selected && !cur) select(g.selected); });
+  }
+
+  /* ----------------------------- controls ---------------------------- */
+  function cap() { return g.flags.slider ? g.level : 0.5; }
+  function pressStart() {
+    if (!built() || g.windDrive || paused()) return;
+    Audio.init();
+    g.holding = true; g.effort = Math.min(cap(), g.effort + 0.15);
+    $('crank-btn').classList.add('down'); Audio.tick();
+  }
+  function pressEnd() { g.holding = false; $('crank-btn').classList.remove('down'); }
+  function windEffort(t) { return 0.84 + 0.11 * Math.sin(t * 0.55) + 0.05 * Math.sin(t * 1.9 + 1); }
+  function bindControls() {
+    var b = $('crank-btn'), wheel = $('a-crank');
+    [b, wheel].forEach(function (x) {
+      x.addEventListener('pointerdown', function (e) { if (e.button) return; pressStart(); });
+    });
+    ['pointerup', 'pointercancel', 'blur'].forEach(function (ev) { window.addEventListener(ev, pressEnd); });
+    b.addEventListener('keydown', function (e) {
+      if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); if (!e.repeat) pressStart(); }
+    });
+    b.addEventListener('keyup', function (e) { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); pressEnd(); } });
+    $('latch').addEventListener('change', function (e) { g.latch = e.target.checked; Audio.init(); });
+    $('effort').addEventListener('input', function (e) { g.level = e.target.value / 100; $('effort-out').textContent = e.target.value + '%'; });
+
+    $('bubble-ok').addEventListener('click', closeBubble);
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') { if (cur) closeBubble(); else if (modal.log) toggleLog(false); }
+    });
+    window.addEventListener('resize', positionBubble);
+    window.addEventListener('scroll', positionBubble, { passive: true });
+
+    $('gen').addEventListener('click', function (e) {
+      if ($('gen').classList.contains('placing') || cur) return;
+      var i = e.target.closest('[data-inspect]'); if (i) { inspect(i.getAttribute('data-inspect')); return; }
+      var x = e.target.closest('[data-explain]'); if (!x) return;
+      var ids = x.getAttribute('data-explain').split(','), pick = null;
+      g.order.forEach(function (id) { if (ids.indexOf(id) >= 0) pick = id; });
+      if (pick) show(pick);
+    });
+    $('gen').addEventListener('keydown', function (e) {
+      var i = e.target.closest && e.target.closest('[data-inspect]');
+      if (i && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); inspect(i.getAttribute('data-inspect')); }
+    });
+
+    $('btn-log').addEventListener('click', function () { toggleLog(!modal.log); });
+    $('log-close').addEventListener('click', function () { toggleLog(false); });
+    $('btn-mute').addEventListener('click', function (e) {
+      Audio.init(); var m = Audio.toggle();
+      e.currentTarget.setAttribute('aria-pressed', m); e.currentTarget.textContent = 'Sound: ' + (m ? 'off' : 'on');
+    });
+    var rt = 0;
+    $('btn-restart').addEventListener('click', function (e) {
+      var btn = e.currentTarget;
+      if (btn.dataset.arm) { clearTimeout(rt); delete btn.dataset.arm; btn.textContent = 'Restart'; reset(); return; }
+      btn.dataset.arm = '1'; btn.textContent = 'Really restart?';
+      rt = setTimeout(function () { delete btn.dataset.arm; btn.textContent = 'Restart'; }, 3000);
+    });
+    $('end-continue').addEventListener('click', function () { modal.ending = false; $('ending').hidden = true; syncUI(); $('crank-btn').focus(); });
+    $('end-restart').addEventListener('click', reset);
+    $('intro-start').addEventListener('click', endIntro);
+    $('intro-skip').addEventListener('click', endIntro);
+    document.addEventListener('visibilitychange', function () { last = performance.now(); pressEnd(); });
+  }
+
+  /* ------------------------ rooms and upgrades ----------------------- */
+  function toggleRoom(i) {
+    if (paused()) return;
+    if (!g.roomOpen[i]) { toast('That room isn’t wired in yet.'); return; }
+    Audio.init();
+    if (!g.rooms[i] && i === 1 && g.prediction === null) { askPrediction(); return; }
+    g.rooms[i] = !g.rooms[i]; Audio.tick();
+    if (!g.rooms[i] && g.seen.heavier && !g.flags.shed && g.out && g.out.I > 0.05) { g.flags.shed = true; award(1); crew('shed'); }
+    syncUI();
+  }
+  function askPrediction() {
+    var P = C.prediction;
+    $('predict-title').textContent = P.title; $('predict-q').textContent = P.question;
+    $('predict-opts').innerHTML = P.options.map(function (o) { return '<button type="button" data-p="' + o.id + '">' + o.label + '</button>'; }).join('');
+    modal.predict = true; g.holding = false; $('predict').hidden = false;
+    $('predict-opts').querySelector('button').focus();
+  }
+  function bindRooms() {
+    $('switches').addEventListener('click', function (e) { var b = e.target.closest('[data-room]'); if (b) toggleRoom(+b.getAttribute('data-room')); });
+    $('house').addEventListener('click', function (e) { var r = e.target.closest('.room'); if (r) toggleRoom(+r.getAttribute('data-room')); });
+    $('predict-opts').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-p]'); if (!b) return;
+      g.prediction = b.getAttribute('data-p'); modal.predict = false; $('predict').hidden = true;
+      g.rooms[1] = true; toast(C.prediction.after); syncUI();
+      var sw = document.querySelector('.sw[data-room="1"]'); if (sw) sw.focus();
+    });
+    $('shop').addEventListener('click', function (e) { var b = e.target.closest('[data-up]'); if (b) buy(b.getAttribute('data-up')); });
+    $('notes').addEventListener('click', function (e) { var b = e.target.closest('[data-b]'); if (b) show(b.getAttribute('data-b')); });
+    $('log-body').addEventListener('click', function (e) { var b = e.target.closest('[data-b]'); if (b) { toggleLog(false); show(b.getAttribute('data-b')); } });
+  }
+  function buy(id) {
+    if (cur) return;
+    if (id === 'wind') {
+      g.windDrive = !g.windDrive; g.holding = false; g.latch = false; $('latch').checked = false;
+      crew(g.windDrive ? 'windOn' : 'windOff'); syncUI();
+      if (g.windDrive && !g.seen.wind) show('wind');
+      return;
+    }
+    if (g.upg[id]) return;
+    var U = C.upgrades[id];
+    if (g.supplies < U.cost) { crew('noSupplies'); return; }
+    var before = mach;
+    g.supplies -= U.cost; g.upg[id] = true; mach = S.machine(g.upg, true);
+    $('supplies').textContent = g.supplies;
+    if (id === 'loss') {
+      var n = 3, wB = REF_W, a = S.electrical(before, wB, n, true), b = S.electrical(mach, wB, n, true);
+      var hb = a.pWire + (before.c + before.b * wB) * wB, ha = b.pWire + (mach.c + mach.b * wB) * wB;
+      g.bench.efficiency = { cap: 'Bench test · same speed, three rooms connected', unit: 'W', max: Math.max(hb, ha),
+        rows: [{ label: 'heat, before', v: hb }, { label: 'heat, after', v: ha, after: true }] };
+      show('efficiency');
+    } else {
+      var key = id === 'turns' ? 'turns' : 'strongmagnet';
+      g.bench[key] = { cap: 'Bench test · same speed, nothing connected', unit: 'V', max: mach.k * REF_W,
+        rows: [{ label: 'before', v: before.k * REF_W }, { label: 'after', v: mach.k * REF_W, after: true }],
+        note: id === 'turns' ? 'The longer wire also has about a third more resistance to warm up.' : '' };
+      show(key);
+    }
+    crew('upgraded'); Audio.tick(); syncUI();
+  }
+  function renderShop() {
+    var s = $('shop'); if (s.hidden) return;
+    var ids = ['turns', 'magnet', 'loss']; if (g.ended) ids.push('wind');
+    s.innerHTML = ids.map(function (id) {
+      var U = C.upgrades[id], owned = id === 'wind' ? g.windDrive : g.upg[id], poor = !owned && g.supplies < U.cost;
+      var cost = id === 'wind' ? (g.windDrive ? 'Running — click to go back to the crank' : 'Free — click to mount') : owned ? 'Fitted' : U.cost + ' supplies';
+      return '<button type="button" class="up' + (owned && id !== 'wind' ? ' owned' : '') + (poor ? ' poor' : '') + '" data-up="' + id + '"' +
+        (owned && id !== 'wind' ? ' aria-disabled="true"' : '') + '><b>' + U.name + '</b><small>' + U.blurb + '</small><span class="cost">' + cost + '</span></button>';
+    }).join('');
+  }
+  function toggleLog(open) {
+    modal.log = open; $('log').hidden = !open;
+    if (!open) { $('btn-log').focus(); return; }
+    var topics = [], html = '';
+    C.bubbles.forEach(function (b) { if (b.log !== false && topics.indexOf(b.topic) < 0) topics.push(b.topic); });
+    topics.forEach(function (t) {
+      html += '<h3>' + t + '</h3>';
+      C.bubbles.filter(function (b) { return b.topic === t && b.log !== false; }).forEach(function (b) {
+        html += g.seen[b.id]
+          ? '<button type="button" class="entry" data-b="' + b.id + '"><b>' + b.title + '</b><span>' + b.body + '</span></button>'
+          : '<div class="locked">Not found yet — ' + b.trigger.charAt(0).toLowerCase() + b.trigger.slice(1) + '.</div>';
+      });
+    });
+    $('log-body').innerHTML = html; $('log-close').focus();
+  }
+
+  /* ------------------------------ render ----------------------------- */
+  function renderTurns() {
+    ['L', 'R'].forEach(function (side) {
+      var grp = $('turns' + side), x0 = side === 'L' ? 90 : 348, n = Math.floor(g.wind), w = g.upg.loss ? 7.6 : 6.2, i;
+      grp.innerHTML = '';
+      if (g.upg.turns) for (i = 0; i < 11; i++) el('rect', { x: x0 + 4.4 + i * 8.8, y: 145, width: w, height: 90, rx: 3, fill: 'url(#g-copper2)' }, grp);
+      for (i = 0; i < n; i++) el('rect', { x: x0 + i * 8.8, y: 152, width: w, height: 76, rx: 3, fill: 'url(#g-copper)' }, grp);
+    });
+  }
+  function arc(cx, cy, r, a0, a1, sweep) {
+    var p = function (a) { a *= Math.PI / 180; return (cx + r * Math.cos(a)).toFixed(1) + ' ' + (cy + r * Math.sin(a)).toFixed(1); };
+    return 'M' + p(a0) + 'A' + r + ' ' + r + ' 0 0 ' + sweep + ' ' + p(a1);
+  }
+  function buildStatic() {
+    var t = $('ticks');
+    for (var v = 0; v <= 40; v += 5) {
+      var a = (-60 + 120 * v / 40) * Math.PI / 180, s = Math.sin(a), c = Math.cos(a), major = v % 10 === 0;
+      el('line', { x1: 620 + 50 * s, y1: 170 - 50 * c, x2: 620 + (major ? 58 : 55) * s, y2: 170 - (major ? 58 : 55) * c }, t);
+      if (major) el('text', { x: 620 + 67 * s, y: 170 - 67 * c }, t).textContent = v;
+    }
+    $('arc-drive').setAttribute('d', arc(270, 372, 52, 30, 150, 1));
+    $('arc-drag').setAttribute('d', arc(270, 190, 78, 330, 210, 0));
+    var rain = $('rain');
+    for (var r = -1; r < 9; r++) for (var cI = 0; cI < 11; cI++) {
+      var x = cI * 46 + ((cI * 37) % 23) - r * 14 + 60, y = r * 60 + ((cI * 53) % 60);
+      el('line', { x1: x, y1: y, x2: x - 4, y2: y + 16 }, rain);
+    }
+    $('switches').innerHTML = C.rooms.map(function (n, i) {
+      return '<button type="button" class="sw" role="switch" aria-checked="false" data-room="' + i + '"><span class="nm">' + n + '</span><span class="st"></span><span class="tx">not wired</span></button>';
+    }).join('');
+    $('intro-sub').textContent = C.subtitle;
+  }
+
+  // Everything that changes on events (not every frame).
+  function syncUI() {
+    var gen = $('gen'), b = built(), st = g.stage;
+    $('app').dataset.stage = st;
+    $('objective').textContent = st === 'intro' ? '' : (st === 'assemble' && g.winding ? C.objectives.winding : C.objectives[st]);
+    ['magnet', 'wire', 'core', 'crank'].forEach(function (p) { gen.classList.toggle('has-' + p, g.placed[p]); });
+    renderTurns(); renderTray();
+    // visible effects of upgrades
+    var big = g.upg.magnet, y = big ? 165 : 172, h = big ? 50 : 36;
+    ['magN', 'magS', 'magO'].forEach(function (id) { $(id).setAttribute('y', y); $(id).setAttribute('height', h); });
+    $('magN').setAttribute('fill', big ? '#ff5b4a' : '#e2574c'); $('magS').setAttribute('fill', big ? '#2f8cff' : '#3f86e0');
+    Array.prototype.forEach.call(gen.querySelectorAll('.wire'), function (w) { w.classList.toggle('thick', g.upg.loss); });
+    $('hub').classList.toggle('gold', g.upg.loss);
+    hid($('crankwheel'), g.windDrive); hid($('turbine'), !g.windDrive);
+    $('drive-tag').textContent = g.windDrive ? 'wind’s push' : 'your push';
+    // leads
+    hid($('lead0'), !g.leadAt.term0); hid($('lead1'), !g.leadAt.term1); hid($('tohouse'), g.leads === 0);
+    Array.prototype.forEach.call(document.querySelectorAll('.hwire'), function (w) { w.classList.toggle('wired', g.leads >= 2); });
+    // inspect badges
+    var hp = $('h-poles'), hc = $('h-coating'), hs = $('h-scope');
+    hid(hp, !g.placed.magnet); hp.classList.toggle('new', !g.seen.poles);
+    hid(hc, g.wind < 12); hc.classList.toggle('new', !g.seen.coating);
+    hid($('a-scope'), !g.seen.induction); hid(hs, !g.seen.induction); hs.classList.toggle('new', !g.seen.waveform);
+    // controls
+    $('crank-btn').disabled = !b || g.windDrive;
+    $('a-crank').classList.toggle('ready', b && !g.windDrive);
+    $('latch-box').hidden = !b || g.windDrive || st === 'stop';
+    $('effort-box').hidden = !g.flags.slider || g.windDrive;
+    $('crank-hint').textContent = !b ? 'Build the generator first.' : g.windDrive ? 'The wind is doing the turning.' :
+      st === 'stop' ? 'Hands off the crank…' : 'Each click is a push. Hold to keep turning.';
+    $('row-rpm').hidden = !b; $('row-effort').hidden = !b;
+    $('row-demand').hidden = g.leads < 2; $('power-box').hidden = !g.seen.load;
+    $('meters-hint').hidden = b;
+    // side panel: tray -> notes -> shop
+    var showTray = st === 'assemble' || st === 'wire', showShop = !!g.flags.shop;
+    $('tray').hidden = !showTray; $('shop').hidden = showTray || !showShop; $('notes').hidden = showTray || showShop;
+    $('side-title').textContent = showTray ? 'Parts tray' : showShop ? 'Upgrades — spend supplies' : 'Field notes';
+    if (!$('notes').hidden) {
+      var last3 = g.order.slice(-3).reverse();
+      $('notes').innerHTML = '<ul>' + last3.map(function (id) { return '<li><button type="button" data-b="' + id + '">' + BUB[id].title + '</button></li>'; }).join('') +
+        '</ul><p class="hint">Tap a glowing <b>i</b> on the machine to inspect a part. Each discovery earns a supply.</p>';
+    }
+    renderShop();
+    // switches
+    Array.prototype.forEach.call(document.querySelectorAll('.sw'), function (sw, i) {
+      sw.disabled = !g.roomOpen[i]; sw.setAttribute('aria-checked', g.rooms[i]);
+    });
+    for (var i = 0; i < 3; i++) {
+      $('room-' + i).classList.toggle('open', g.roomOpen[i]);
+      $('swg-' + i).classList.toggle('on', g.rooms[i]);
+    }
+    $('supplies').textContent = g.supplies;
+    $('log-count').textContent = g.order.length;
+  }
+
+  var textAcc = 0;
+  function render(dt) {
+    var o = g.out || { E: 0, V: 0, I: 0, tauEm: 0, tauIn: 0, pIn: 0, pLoad: 0, pWire: 0, pFric: 0, brightness: 0 };
+    var deg = g.vis * 180 / Math.PI;
+    $('rotor').setAttribute('transform', 'rotate(' + deg.toFixed(1) + ' 270 190)');
+    $('lblN').setAttribute('transform', 'rotate(' + (-deg).toFixed(1) + ' 232 190)');
+    $('lblS').setAttribute('transform', 'rotate(' + (-deg).toFixed(1) + ' 308 190)');
+    var wdeg = (deg / 3).toFixed(1);
+    $('crankwheel').setAttribute('transform', 'rotate(' + wdeg + ' 270 372)');
+    $('turbine').setAttribute('transform', 'rotate(' + wdeg + ' 270 372)');
+    // field through each coil: follows the magnet's orientation
+    var c = -Math.cos(g.vis), len = 40 * c * (g.placed.core ? 1 : S.BASE.noCore) * (g.upg.magnet ? 1.15 : 1);
+    $('fieldL').setAttribute('x1', 141 - len); $('fieldL').setAttribute('x2', 141 + len);
+    $('fieldR').setAttribute('x1', 399 - len); $('fieldR').setAttribute('x2', 399 + len);
+    $('field').style.opacity = Math.abs(c) < 0.08 ? 0 : 1;
+    // meter
+    var V = g.placed.wire && g.wind >= 12 ? o.V : 0;
+    $('needle').setAttribute('transform', 'rotate(' + (-60 + 120 * clamp(V, 0, 40) / 40).toFixed(1) + ' 620 170)');
+    // arrows
+    $('arrow-drive').setAttribute('opacity', clamp(o.tauIn / 2, 0, 1).toFixed(2));
+    $('arrow-drag').setAttribute('opacity', g.flags.arrow ? clamp(o.tauEm / 1.2, 0, 1).toFixed(2) : 0);
+    // wires
+    var live = o.I > 0.05;
+    Array.prototype.forEach.call(document.querySelectorAll('#gen .wire'), function (w) { w.classList.toggle('live', live); });
+    $('bus-main').classList.toggle('live', live);
+    // rooms (lamps brighten and fade with a little lag)
+    var lit = 0;
+    for (var i = 0; i < 3; i++) {
+      var target = g.rooms[i] && g.leads >= 2 ? o.brightness : 0;
+      g.disp[i] += (target - g.disp[i]) * Math.min(1, dt * 7);
+      var d = g.disp[i], room = $('room-' + i);
+      room.querySelector('.rglow').style.opacity = (Math.min(1, d) * 0.92).toFixed(3);
+      room.querySelector('.bulb-on').style.opacity = Math.min(1, d * 1.3).toFixed(3);
+      room.classList.toggle('lit', d > 0.5);
+      $('br-' + i).classList.toggle('live', live && g.rooms[i]);
+      if (d >= LIT) lit++;
+    }
+    // scope: one rotor turn = one cycle, drawn on the same slowed clock as the rotor
+    if (g.seen.induction) {
+      var A = clamp(V / 40, 0, 1) * 36, cyc = 1 + g.rot.omega / 9, p = '';
+      for (var x = 0; x <= 124; x += 2) p += (x ? 'L' : 'M') + (558 + x) + ' ' + (372 - A * Math.sin(g.vis + x / 124 * 2 * Math.PI * cyc)).toFixed(1);
+      $('scope-path').setAttribute('d', p);
+    }
+    Audio.setHum(g.rot.omega);
+
+    textAcc += dt; if (textAcc < 0.12) return; textAcc = 0;
+    $('volt-text').textContent = V.toFixed(1) + ' V';
+    $('m-rpm').textContent = Math.round(S.rpm(g.rot.omega));
+    $('m-effort').style.width = (g.effort * 100).toFixed(0) + '%';
+    var n = roomsOn();
+    $('m-demand').textContent = n ? n + (n > 1 ? ' rooms' : ' room') + ' · ' + n * S.BASE.Prated + ' W when fully lit' : 'none';
+    var heat = o.pWire + o.pFric, tot = o.pLoad + heat;
+    $('m-pin').textContent = Math.round(o.pIn); $('m-pload').textContent = Math.round(o.pLoad); $('m-pheat').textContent = Math.round(heat);
+    $('m-split-load').style.width = (clamp(o.pLoad / 70, 0, 1) * 100).toFixed(1) + '%';
+    $('m-split-heat').style.width = (clamp(heat / 70, 0, 1 - clamp(o.pLoad / 70, 0, 1)) * 100).toFixed(1) + '%';
+    void tot;
+    for (i = 0; i < 3; i++) {
+      var pct = Math.round(Math.min(g.disp[i], 9.99) * 100), on = g.rooms[i];
+      $('room-' + i).querySelector('.rpct').textContent = g.roomOpen[i] ? (on ? pct + '%' : 'off') : '';
+      var tx = document.querySelector('.sw[data-room="' + i + '"] .tx');
+      tx.textContent = !g.roomOpen[i] ? 'not wired' : on ? 'on · ' + pct + '% bright' : 'off';
+    }
+    var pips = $('pips').querySelectorAll('i');
+    for (i = 0; i < 3; i++) pips[i].classList.toggle('on', i < lit);
+    $('pips').setAttribute('aria-label', 'Rooms lit: ' + lit + ' of 3');
+    // status chip
+    var k;
+    if (!built()) k = 'unbuilt';
+    else if (cur) k = 'paused';
+    else if (g.rot.omega < 0.3) k = 'stopped';
+    else if (g.leads < 2) k = 'open';
+    else if (n === 0) k = 'noRooms';
+    else if (o.brightness < LIT) k = 'more';
+    else if (o.brightness > 1.5) k = 'bright';
+    else k = 'stable';
+    var chip = $('status'); if (chip.dataset.k !== k) { chip.dataset.k = k; chip.textContent = C.status[k]; }
+    $('app').classList.toggle('struggle', k === 'more');
+  }
+
+  /* --------------------------- main loop ----------------------------- */
+  var last = performance.now(), acc = 0;
+  function tick(h) {
+    if (g.windDrive) g.effort = windEffort(g.t);
+    else if (g.holding || g.latch) g.effort = Math.min(cap(), g.effort + 1.2 * h);
+    else g.effort = Math.max(0, g.effort - 0.3 * h);
+    if (g.effort > cap() && !g.windDrive) g.effort = Math.max(cap(), g.effort - 1.5 * h);
+    g.out = S.step(g.rot, mach, g.effort, roomsOn(), g.leads >= 2, h);
+    g.vis += g.rot.omega * VIS * h; g.t += h;
+    progress(h);
+  }
+  function frame(now) {
+    var dt = (now - last) / 1000; last = now;
+    if (dt > 0.1) dt = 0.1;                       // never jump after time away from the tab
+    if (dt < 0) dt = 0;
+    if (g.winding && g.windHold) addWind(9 * dt);
+    if (built() && !paused()) { acc += dt; var guard = 0; while (acc >= H && guard++ < 24 && !paused()) { tick(H); acc -= H; } if (guard >= 24) acc = 0; }
+    else acc = 0;
+    render(dt);
+    requestAnimationFrame(frame);
+  }
+
+  /* -------------------------- intro / reset -------------------------- */
+  var introTimers = [];
+  function startIntro() {
+    modal.intro = true; $('intro').hidden = false;
+    var box = $('intro-lines'); box.innerHTML = C.intro.map(function (l) { return '<p>' + l + '</p>'; }).join('');
+    var ps = box.querySelectorAll('p'), start = $('intro-start');
+    introTimers.forEach(clearTimeout); introTimers = [];
+    if (REDUCED) { Array.prototype.forEach.call(ps, function (p) { p.classList.add('in'); }); start.hidden = false; start.focus(); return; }
+    start.hidden = true;
+    var fl = $('flash'); fl.classList.remove('go'); void fl.offsetWidth; fl.classList.add('go'); Audio.thunder();
+    Array.prototype.forEach.call(ps, function (p, i) { introTimers.push(setTimeout(function () { p.classList.add('in'); }, 700 + i * 1700)); });
+    introTimers.push(setTimeout(function () { start.hidden = false; }, 700 + ps.length * 1700 - 600));
+    $('intro-skip').focus();
+  }
+  function endIntro() {
+    introTimers.forEach(clearTimeout);
+    Audio.init(); modal.intro = false; $('intro').hidden = true;
+    setStage('assemble'); crew('start');
+    var first = document.querySelector('#tray .part'); if (first) first.focus({ preventScroll: true });
+  }
+  function reset() {
+    g = freshState(); queue = []; cur = null; lastFocus = null; mach = S.machine(g.upg, true); acc = 0;
+    modal.predict = modal.ending = modal.log = false;
+    ['bubble', 'ring', 'predict', 'ending', 'log', 'toast', 'supplies-box'].forEach(function (id) { $(id).hidden = true; });
+    $('latch').checked = false; $('effort').value = 50; $('effort-out').textContent = '50%';
+    $('crew').querySelector('.who').textContent = ''; $('crew').querySelector('.say').textContent = '';
+    markZones(null); syncUI(); startIntro();
+  }
+
+  /* ------------------------------- boot ------------------------------ */
+  buildStatic(); bindTray(); bindControls(); bindRooms(); syncUI(); startIntro();
+  requestAnimationFrame(frame);
+  window.__lbo = { state: function () { return g; }, machine: function () { return mach; } }; // for testing
+})();
+
+</script>
+</body>
+</html>

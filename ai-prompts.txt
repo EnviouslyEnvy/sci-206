@@ -1,0 +1,579 @@
+AI PROMPTS USED — SCI 206 project (Lights Back On)
+
+Tools: Claude (Anthropic) and ChatGPT/Codex (OpenAI). These are the project prompts, in order.
+
+Add any prompts your group used in other chats or tools before submitting.
+
+==================== PROMPT 0 ====================
+
+Tool: ChatGPT/Codex (OpenAI).
+
+I am brainstorming making a cookie clicker type game, but with generators. I was thinkign at the scenario can first start with a storm, and the power went out. Luckily you are a genius/have a team of engineers who can assembly a generator. You can click/drag the parts into their appropriate positions like a jigsaw puzzle without actually being one. You can drag a solenoid to the metal core to make a coil. Put the magnet in the middle. Then after it's set up you can purchase things like additional coil turns/rotations, idk if it would help but maybe some better gear ratio for the spinner? Potentially you can enable/add more load/connect more rooms which will require more effort to spin the magnet. Oh yeah you click the magnet to spin it at first. It needs to be educational still, so popups in the style of little captions connected/pointing to the parts (if there is a relevant part) should pop up explaining things. And there should be an explanation log if people want to view them again. How is this idea? I’ll make a polished prompt after to scale the game out.
+
+==================== PROMPT 1 ====================
+
+Tool: Claude (Anthropic)
+
+Build a complete, playable educational browser game for a university SCI 206 “The Physics of How Things Work” project.
+
+Implement the game, run it, and verify the main interactions. Make reasonable implementation decisions without repeatedly asking for confirmation.
+
+Project purpose:
+
+The game teaches how a permanent-magnet generator works through assembly, experimentation, and restoring lighting after a blackout.
+
+The audience is university students taking an introductory, explanation-focused physics course. The experience should be understandable without prior electrical engineering knowledge.
+
+The project is graded on:
+
+- Accurate physics explained at an introductory level.
+
+- Originality of explanation and presentation.
+
+- Creativity and effective use of the chosen medium.
+
+Do not display equations in the player-facing experience. Internal calculations are fine.
+
+Aim for a satisfying first playthrough of approximately 3–5 minutes. Give it a clear ending and allow continued experimentation afterward.
+
+Premise and tone:
+
+A storm has knocked out the neighborhood’s power. The player and a small engineering team assemble an emergency generator to restore essential lighting in a house.
+
+Start with a brief storm/blackout introduction: a flash, rain, lights going out, and a concise objective. Include a skip option.
+
+The story should establish:
+
+“The power is out. We have the parts. Let’s get the lights back on.”
+
+Use a friendly, slightly playful tone. Let small reactions from the engineering team acknowledge discoveries and progress. Avoid lengthy dialogue, childish narration, or exaggerated claims that the player has invented electricity.
+
+The generator initially supplies low-power emergency lighting, not every appliance in a full-sized house.
+
+Main gameplay:
+
+Combine a short assembly tutorial with an incremental/clicker-style progression loop:
+
+1. Assemble the generator.
+
+2. Manually turn it.
+
+3. Observe voltage before a load is connected.
+
+4. Complete a circuit and illuminate the first room.
+
+5. Connect additional rooms and experience the increased turning effort.
+
+6. Experiment with upgrades and operating choices.
+
+7. Restore the required lighting and reach an ending.
+
+8. Continue experimenting if desired.
+
+Preserve the satisfaction of a clicker game without requiring frantic clicking or repetitive grinding.
+
+Use a small scope:
+
+- One clearly visible generator.
+
+- Three independently switchable room-lighting circuits.
+
+- A few meaningful upgrades.
+
+- One main restoration objective.
+
+Assembly interaction:
+
+Let the player drag components from a parts tray into meaningful positions on the generator.
+
+This should feel like assembling a machine, not solving an arbitrary jigsaw puzzle.
+
+Include:
+
+- Permanent bar magnet with visible N/S labels.
+
+- Insulated copper wire winding/coils.
+
+- Soft iron core pieces inside the stationary windings.
+
+- Rotor shaft and crank.
+
+- Wires, a switch, and the first lamp circuit.
+
+Show plausible target areas, hover feedback, snap-to-position behavior, and short contextual instructions. Invalid placement should give helpful feedback without punishing the player.
+
+Support a click-select/click-place alternative to dragging, particularly for touch and keyboard accessibility.
+
+A “wind the coil” interaction can involve dragging wire onto a form or clicking/holding to add several visible turns. Do not require painstaking wire tracing.
+
+Terminology:
+
+- A turn is one loop of wire.
+
+- A coil contains multiple turns.
+
+- A cylindrical winding is a solenoid.
+
+- Adding an iron core changes the coil assembly; it does not create the coil itself.
+
+Keep the coil and core assembly stationary. The magnet rotates freely in a central gap, with its north and south poles sweeping past the stationary coils. Do not animate the magnet merely spinning about its own long axis without changing the field through the windings.
+
+Use a consistent simplified generator arrangement throughout. If showing two windings, treat them as connected with the appropriate winding orientation so their useful outputs add.
+
+Manual generation controls:
+
+Initially, clicking or pressing the crank supplies mechanical input and spins the magnet.
+
+Include:
+
+- Click/tap input.
+
+- A hold-to-crank option.
+
+- A keyboard equivalent, such as Space when the crank control is focused.
+
+- Clear feedback showing each input contributing effort.
+
+The rotor should have inertia: it accelerates, coasts, and slows rather than snapping between arbitrary states.
+
+Represent player input as bounded mechanical driving effort, not a command that forces the rotor to maintain a fixed speed regardless of load.
+
+Keep input comfortable. Do not make success depend on exceptional clicking speed.
+
+Before the first lamp is connected, let the player spin the generator and see voltage on a meter.
+
+The lamp must remain off while its circuit is open.
+
+Completing both connections and closing the switch allows load current and lights the lamp.
+
+This should make the distinction clear:
+
+- Spinning can induce voltage with an open load circuit.
+
+- Sustained current through the lamp requires a complete circuit.
+
+Do not depict electrons being created by the magnet or consumed by the bulb.
+
+For Loads, rooms, and Lenz’s law:
+
+Each room has a lighting circuit with its own switch. Connect room circuits in parallel.
+
+When the player adds a room:
+
+- The generator experiences increased electrical demand.
+
+- At the existing operating speed, maintaining that speed requires more mechanical input.
+
+- If input is insufficient, the rotor slows and voltage/lighting output falls.
+
+- The player can respond by increasing effort or disconnecting a room.
+
+Make the change noticeable and understandable.
+
+Before the first additional room is connected, briefly ask the player to predict what will happen to the effort required. Then let them test it.
+
+After the effect is visible, explain it through a bubble pointing to the coils and an opposing rotation arrow.
+
+The underlying explanation:
+
+Current in the windings produces a magnetic response that opposes the change driving generation. In this generator, that creates an opposing electromagnetic torque.
+
+Important distinctions:
+
+- This magnetic turning resistance is not simply mechanical friction.
+
+- It is not the same quantity as the wire’s electrical resistance.
+
+- Adding parallel loads can increase required turning effort while reducing the equivalent external electrical resistance.
+
+- Lenz’s law does not mean the coil always repels the permanent magnet.
+
+- Electrical energy delivered to the lights comes from mechanical input.
+
+Let players turn loads off again and observe the reduced demand. Avoid making room switches permanent purchases that can never be reversed.
+
+Physics behavior:
+
+Use a coherent, lightweight simulation, not unrelated visual effects and arbitrary output multipliers.
+
+It does not need engineering-grade accuracy, but these relationships must remain consistent:
+
+- A stationary rotor produces no continuing induced voltage in this setup.
+
+- Faster rotation increases induced voltage with otherwise unchanged construction.
+
+- A stronger magnet can increase induced voltage at the same speed.
+
+- More winding turns can increase induced voltage at the same speed.
+
+- Soft iron cores improve magnetic coupling in the chosen geometry.
+
+- Supplying load current produces an opposing electromagnetic torque.
+
+- Extra electrical output requires extra mechanical energy input.
+
+- Some energy is lost through winding resistance and mechanical friction.
+
+- Increasing wire turns also adds wire resistance; it is not an unlimited power upgrade.
+
+- An open load circuit has essentially no load current, although friction and other simplified losses can remain.
+
+You may use an averaged electrical model for performance and readability. If showing an AC waveform, keep it synchronized qualitatively with rotor speed and voltage. The light display can represent average brightness; it need not visibly strobe.
+
+Do not present the simulation as a precise household electrical design tool.
+
+Upgrades and progression:
+
+Include a small number of understandable upgrades, such as:
+
+- Additional wire turns.
+
+- A stronger permanent magnet.
+
+- Lower-loss wiring or improved bearings.
+
+Make their effects visible on the machine, not just in a numerical multiplier.
+
+Allow comparisons at the same rotation speed so the player can distinguish a construction change from simply cranking faster. A short controlled comparison mode is acceptable.
+
+Use “engineering credits,” “supplies,” or a similarly clear fictional progression currency earned through discoveries and restoration milestones. Do not imply that a numerical score is physically stored electricity.
+
+Keep costs and rewards tuned so all required learning moments are reachable within the short first playthrough.
+
+Avoid upgrades that promise free energy or automatically increase every desirable quantity.
+
+Optional features, only after the core game works:
+
+- Selectable gears: trading rotor speed per crank revolution against required crank torque under load. No gear should increase speed and turning force for free.
+
+- Wind or water drive: a visible external energy source that replaces the player’s manual work.
+
+- Extra diagnostic views.
+
+Do not implement a self-powering motor-generator loop.
+
+A wind/water drive or an explicitly stronger mechanical driving source may be used for the finale if useful. Do not make winding upgrades magically replace the energy needed to power more rooms.
+
+Educational bubbles and explanation log:
+
+I will attach a separate text file containing the educational bubble copy.
+
+Treat that file as the source of truth for the supplied wording. Preserve its text unless a correction is required for physical accuracy or the implemented interaction. Explain any necessary changes in your final implementation notes.
+
+Keep the content separate from rendering and simulation code. Use a structured content module with fields such as:
+
+- ID.
+
+- Title.
+
+- Body.
+
+- Trigger.
+
+- Anchor component.
+
+- Whether it has been seen.
+
+- Replay/log availability.
+
+Bubbles should:
+
+- Appear in response to a relevant placement, observation, or player decision.
+
+- Point to the component being discussed.
+
+- Present one main idea at a time.
+
+- Avoid covering the component or controls they refer to.
+
+- Wait for dismissal during important tutorial moments.
+
+- Avoid appearing repeatedly during normal play.
+
+- Be accessible through an explanation log afterward.
+
+Pause or stabilize the simulation during important explanations so the player does not lose progress while reading. Make this behavior clear.
+
+The log should offer readable entries grouped by topic or discovery order. Selecting a component can reopen its explanation after the initial tutorial.
+
+If the text file has not been supplied yet, create concise placeholders behind the same content interface and clearly identify them for replacement. Do not block implementation waiting for copy.
+
+Originality and explanation style
+
+If you decide to add on your anything I didn’t include in a script for the captions:
+Avoid reproducing a slides or demonstrations
+
+In particular, a classroom demonstration already compares a hand-cranked generator with zero, one, and two bulbs. Our game should develop that principle through:
+
+- A blackout restoration objective.
+
+- Player assembly.
+
+- Predictions followed by experiments.
+
+- A limited mechanical input.
+
+- Independently switchable rooms.
+
+- Visible consequences and recovery choices.
+
+- Upgrade comparisons.
+
+Use the supplied conversational explanations and comparisons. Do not add a forced analogy to every bubble.
+
+Visual design
+
+Create a polished, cohesive 2D game interface rather than a generic dashboard.
+
+Suggested composition:
+
+- Generator prominently displayed in the main workspace.
+
+- House cutaway or room illustration nearby, with clear lighting changes.
+
+- Parts tray during assembly, replaced by upgrade controls later.
+
+- Compact operating indicators.
+
+- An accessible explanation-log button.
+
+- Clear current objective and restoration progress.
+
+The generator should remain visible while rooms are switched and upgrades are purchased.
+
+Use readable original SVG, CSS, or canvas artwork. Prefer a clear stylized appearance over complex photorealism.
+
+Make these states visually distinct:
+
+- Unassembled.
+
+- Assembled but stationary.
+
+- Spinning with an open circuit.
+
+- Supplying one room.
+
+- Struggling under added load.
+
+- Stable restored lighting.
+
+Use animation to explain:
+
+- Rotor motion.
+
+- Circuit continuity.
+
+- Changing magnetic influence.
+
+- Load-related opposing torque.
+
+- Room brightness.
+
+Field lines and arrows should be understandable illustrations, not misleading streams of fuel or energy particles.
+
+Label N/S poles explicitly; do not rely on color alone.
+
+Operating feedback:
+
+Keep the main interface understandable with only a few indicators, such as:
+
+- Rotor speed.
+
+- Voltage.
+
+- Turning effort/input.
+
+- Connected lighting demand.
+
+- Room brightness or supplied output.
+
+Introduce indicators progressively. Use plain-language labels alongside units where appropriate.
+
+Keep instantaneous power, accumulated energy, and fictional progression currency distinct. Only show physically stored energy if an actual storage component is represented.
+
+Use short status messages to explain issues:
+
+- Circuit open.
+
+- Rotor stopped.
+
+- More input needed.
+
+- Lighting stable.
+
+Do not hide essential feedback inside the explanation log.
+
+Accessibility and usability:
+
+Include:
+
+- Keyboard-operable controls.
+
+- Alternatives to drag-and-drop.
+
+- Comfortable touch targets.
+
+- Readable text and contrast.
+
+- Labels in addition to color.
+
+- Reduced-motion support.
+
+- Sound mute controls.
+
+- No reliance on audio to convey required information.
+
+- Clear focus states.
+
+- Restart/reset functionality.
+
+- Protection against accidental page scrolling while using a focused crank shortcut.
+
+If audio is included, use subtle storm, mechanical, and completion sounds. Prefer original procedural audio or supplied assets. Record attribution for any external assets.
+
+Ending:
+
+The player should restore the required lighting, understand why added demand changes the required input, and finish with a brief final challenge.
+
+For example:
+
+“Another room needs lighting, but the rotor is slowing. What can you change?”
+
+Let the player demonstrate the answer through controls, rather than only answering a multiple-choice question.
+
+Then show:
+
+- A satisfying restoration moment.
+
+- A concise recap tied to what the player did.
+
+- Continue experimenting.
+
+- Restart.
+
+Do not lock the player out of the machine after completion.
+
+Technical implementation:
+
+Use a simple browser stack.
+
+Organize the implementation so:
+
+- Simulation logic is separate from UI rendering.
+
+- Tutorial content is separate from game logic.
+
+- Progression and trigger conditions are explicit.
+
+- Rendering is smooth and simulation behavior does not depend on frame rate.
+
+- Resize handling keeps bubble anchors and interaction targets aligned.
+
+- Time away from the tab does not cause a huge simulation jump.
+
+- Restart reliably restores the initial state.
+
+Do not add accounts, analytics, external AI calls, backend services, or unnecessary network dependencies.
+
+Provide:
+
+1. The working game.
+
+2. Instructions to run and build it.
+
+3. A brief explanation of the simulation assumptions and simplifications.
+
+4. A list of where educational text can be edited.
+
+5. An asset/source attribution file where needed.
+
+6. A short validation summary.
+
+Prioritize the complete playable learning loop before optional features.
+
+Verification:
+
+Run the game and verify:
+
+- All required parts can be assembled.
+
+- Assembly works without dragging.
+
+- A stopped rotor produces no continuing voltage.
+
+- The open-circuit meter can show voltage while the lamp stays off.
+
+- Completing the circuit lights the first room.
+
+- Added load increases the required driving effort.
+
+- Insufficient input produces slowdown and dimming.
+
+- Removing a load reduces demand.
+
+- Upgrades follow the stated physical relationships.
+
+- Tutorial triggers fire in the intended order.
+
+- Bubbles stay attached to their components and can be replayed.
+
+- The ending is reachable without frantic clicking or excessive grinding.
+
+- Keyboard controls, restart, and window resizing work.
+
+- The build completes successfully.
+
+Fix issues you find and deliver the implementation, not just a design proposal.
+
+--- attached file 2: educational bubble copy ---
+
+| Trigger and bubble location | Title | Bubble text |
+
+|---|---|---|
+
+| **Place the permanent magnet.** Point to the magnet. | **No batteries required** | A fridge magnet can hold your shopping list all week without a battery. This magnet keeps its magnetic field too—but that alone won’t power our lights. |
+
+| **Inspect its N/S labels.** Point to the poles. | **Two ends, two poles** | These labels mark the magnet’s north and south poles. We’ll mount it so those poles sweep past the coils as it turns. |
+
+| **Wind the insulated wire.** Point to the winding. | **Every wrap counts** | Wind the wire as you’d wind thread around a spool. Each wrap is a turn. Many turns together make a coil; this cylindrical winding is called a solenoid. |
+
+| **Inspect the wire coating.** Point to a close-up of neighboring turns. | **Close together, electrically separate** | The wire has a thin insulating coating. It lets us pack the turns tightly while keeping current from taking shortcuts between neighboring turns. |
+
+| **Insert the soft iron core.** Point to the iron inside the coil. | **More than a support** | This iron isn’t just holding the wire in place. It guides more of the magnet’s field through the winding, helping the coil produce voltage when that field changes. |
+
+| **Attach the crank.** Point to the player’s input control. | **You’re the power station** | For now, your hand supplies the energy. Turning the crank does mechanical work, which the generator can convert into electrical energy. |
+
+| **Spin the magnet.** Point to the coil and responding meter. | **Something is changing** | The turning magnet changes the magnetic field passing through the coil’s loops. That produces a voltage between the wire’s ends. This process is electromagnetic induction. |
+
+| **Let the rotor stop.** Point to the meter returning to zero. | **Still magnetic. No output.** | The magnet hasn’t lost its magnetism. The field through the coil has simply stopped changing. A stronger stationary magnet wouldn’t solve that—we need the change. |
+
+| **Connect both wires to the lamp.** Trace the completed circuit. | **Finish the connection** | The meter showed voltage, but the bulb needs a complete circuit. With both connections made, current can flow through the bulb and return through the generator. |
+
+| **Light the first room.** Point to the bulb. | **Somewhere for the energy to go** | The bulb is our first electrical load. It turns electrical energy into light and heat. Keeping the room lit means continually delivering more energy. |
+
+| **Connect another room.** Point to the slowing crank. | **The crank feels heavier** | Think of turning up the resistance on an exercise bike. Keeping the same speed now takes more effort. Here, the extra effort is needed to supply another room. |
+
+| **Reveal the opposing rotation arrow.** Point to the coils. | **Where does that extra drag come from?** | Current in the coils produces a magnetic field of its own. Its interaction with the spinning magnet resists the driving motion. That’s Lenz’s law showing up at the crank. |
+
+| **Offer a choice: increase effort or disconnect a room.** Point to the controls. | **Balance the demand** | Keep both rooms connected and supply more turning effort, or switch one off. If demand exceeds what your input can support, the rotor slows and the lights dim. |
+
+| **Purchase additional wire turns.** Point to the added winding. | **Upgrade the winding** | Compare it at the same speed: more turns can produce a higher voltage. The extra wire isn’t an energy source, though. More electrical output still needs more mechanical input. |
+
+**Optional explanations for later upgrades and inspection:**
+
+| Trigger | Title | Bubble text |
+
+|---|---|---|
+
+| Increase rotation speed. | **Same machine, faster motion** | Faster rotation makes the field through the coil change more quickly. With the same winding and magnet, the induced voltage rises. |
+
+| Inspect the voltage waveform. | **Taking turns in each direction** | As the north and south poles trade places, the voltage reverses polarity. With the circuit connected, current reverses too. That’s alternating current, or AC. |
+
+| Purchase a stronger magnet. | **A stronger magnetic change** | At the same rotation speed, a stronger magnet can produce a higher voltage. It changes how the generator performs; it doesn’t replace the work needed to drive it. |
+
+| Select a gear ratio. | **Fewer crank turns—with a catch** | This gear setting spins the rotor farther with each crank revolution. Under load, the crank also becomes harder to turn. You’re trading turning force for speed. |
+
+| Install a waterwheel or wind turbine. | **Someone else does the turning** | You can rest your arm now. Moving water—or wind—supplies the mechanical work. The generator still needs energy; it’s just getting it from somewhere else. |
+
+| Inspect efficiency or upgrade components. | **Why doesn’t everything reach the lights?** | Some of your input warms the wires through electrical resistance. Friction also warms moving parts. Better components can reduce those losses, leaving more energy available for the rooms. |
+

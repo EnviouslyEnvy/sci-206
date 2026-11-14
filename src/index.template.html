@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lights Back On — a generator game</title>
+<style>
+/*__CSS__*/
+</style>
+</head>
+<body>
+<div id="app" data-stage="intro">
+  <header class="top">
+    <div class="brand"><svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M11 1 3 12h5l-1 7 8-11h-5z" fill="currentColor"/></svg><span>Lights Back On</span></div>
+    <div class="objective"><span class="obj-tag">Now</span><span id="objective" aria-live="polite"></span></div>
+    <div class="top-right">
+      <div class="pips" id="pips" role="img" aria-label="Rooms lit: 0 of 3"><i></i><i></i><i></i><span>rooms lit</span></div>
+      <div class="supplies" id="supplies-box" hidden title="Supplies are a game currency earned by discoveries. They are not stored electricity.">Supplies <b id="supplies">0</b></div>
+      <button class="tbtn" id="btn-log" type="button">Explanations <span id="log-count" class="count">0</span></button>
+      <button class="tbtn" id="btn-mute" type="button" aria-pressed="false">Sound: on</button>
+      <button class="tbtn" id="btn-restart" type="button">Restart</button>
+    </div>
+  </header>
+
+  <main class="stage">
+    <section class="bench card" aria-label="Generator workbench">
+      <div class="chip" id="status" role="status"></div>
+      <svg id="gen" viewBox="0 0 700 440" role="group" aria-label="Generator, seen from above">
+        <defs>
+          <linearGradient id="g-copper" x1="0" x2="1"><stop offset="0" stop-color="#8d4519"/><stop offset=".45" stop-color="#f3a970"/><stop offset="1" stop-color="#9a4d1e"/></linearGradient>
+          <linearGradient id="g-copper2" x1="0" x2="1"><stop offset="0" stop-color="#a85a24"/><stop offset=".45" stop-color="#ffc592"/><stop offset="1" stop-color="#b3642c"/></linearGradient>
+          <linearGradient id="g-iron" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#b9c1cd"/><stop offset="1" stop-color="#69717f"/></linearGradient>
+          <linearGradient id="g-plate" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#2a3352"/><stop offset="1" stop-color="#1c233b"/></linearGradient>
+          <marker id="ah-drive" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 10 5 0 10z" fill="#ffbe55"/></marker>
+          <marker id="ah-drag" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 10 5 0 10z" fill="#7fe0e6"/></marker>
+          <marker id="ah-field" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0 10 5 0 10z" fill="#fff"/></marker>
+        </defs>
+
+        <rect class="plate" x="30" y="70" width="500" height="240" rx="22"/>
+        <rect class="plate" x="196" y="296" width="148" height="132" rx="22"/>
+        <circle class="sweep" cx="270" cy="190" r="64"/>
+
+        <!-- stationary iron cores -->
+        <g id="a-coreL"><rect class="slot" x="60" y="172" width="146" height="36" rx="5"/><rect class="core p-core" x="60" y="172" width="146" height="36" rx="5"/></g>
+        <g id="a-coreR"><rect class="slot" x="334" y="172" width="146" height="36" rx="5"/><rect class="core p-core" x="334" y="172" width="146" height="36" rx="5"/></g>
+
+        <!-- output wiring (appears with the winding) -->
+        <g class="p-wire">
+          <path class="wire" id="w-link" d="M196 228V266H344V228"/>
+          <path class="wire" id="w-out1" d="M86 228V296H592"/>
+          <path class="wire" id="w-out2" d="M454 228V250H592"/>
+        </g>
+
+        <!-- stationary coil forms and windings -->
+        <g id="a-coilL" data-explain="winding,turns">
+          <rect class="bobbin" x="86" y="150" width="110" height="80" rx="6"/>
+          <g id="turnsL"></g>
+          <rect class="flange" x="81" y="143" width="6" height="94" rx="2"/><rect class="flange" x="195" y="143" width="6" height="94" rx="2"/>
+        </g>
+        <g id="a-coilR" data-explain="winding,turns,lenz">
+          <rect class="bobbin" x="344" y="150" width="110" height="80" rx="6"/>
+          <g id="turnsR"></g>
+          <rect class="flange" x="339" y="143" width="6" height="94" rx="2"/><rect class="flange" x="453" y="143" width="6" height="94" rx="2"/>
+        </g>
+        <g id="field" class="p-magnet">
+          <line id="fieldL" class="field" x1="141" y1="190" x2="141" y2="190" marker-end="url(#ah-field)"/>
+          <line id="fieldR" class="field" x1="399" y1="190" x2="399" y2="190" marker-end="url(#ah-field)"/>
+          <text class="tiny p-wire" x="141" y="250" text-anchor="middle">field through coil</text>
+          <text class="tiny p-wire" x="399" y="250" text-anchor="middle">field through coil</text>
+        </g>
+
+        <!-- belt + crank -->
+        <g class="p-crank"><path class="belt" d="M233 366 262 192M307 366 278 192"/></g>
+
+        <!-- rotor -->
+        <g id="a-rotor" data-explain="magnet,strongmagnet">
+          <g id="rotor" class="p-magnet">
+            <rect id="magN" x="212" y="172" width="58" height="36" fill="#e2574c"/>
+            <rect id="magS" x="270" y="172" width="58" height="36" fill="#3f86e0"/>
+            <rect id="magO" x="212" y="172" width="116" height="36" rx="5" fill="none" stroke="#0b1020" stroke-width="2"/>
+            <text id="lblN" class="pole" x="232" y="190">N</text>
+            <text id="lblS" class="pole" x="308" y="190">S</text>
+          </g>
+          <circle class="hub" id="hub" cx="270" cy="190" r="9"/>
+          <circle class="hub-dot" cx="270" cy="190" r="3"/>
+        </g>
+
+        <g id="a-crank" tabindex="-1">
+          <circle class="axle-hint" cx="270" cy="372" r="38"/>
+          <circle class="hub" cx="270" cy="372" r="7"/>
+          <g id="crankwheel" class="p-crank">
+            <circle class="wheel" cx="270" cy="372" r="38"/>
+            <path class="spoke" d="M232 372H308M270 334V410"/>
+            <circle class="knob" cx="296" cy="372" r="9"/>
+          </g>
+          <g id="turbine" hidden>
+            <path class="blade" d="M270 372C262 350 262 326 270 312 278 326 278 350 270 372Z"/>
+            <path class="blade" d="M270 372C262 350 262 326 270 312 278 326 278 350 270 372Z" transform="rotate(120 270 372)"/>
+            <path class="blade" d="M270 372C262 350 262 326 270 312 278 326 278 350 270 372Z" transform="rotate(240 270 372)"/>
+            <circle class="hub" cx="270" cy="372" r="8"/>
+          </g>
+        </g>
+
+        <!-- torque arrows -->
+        <g id="arrow-drive" class="p-crank" opacity="0"><path id="arc-drive" class="arc drive" marker-end="url(#ah-drive)"/><text class="tag drive" x="352" y="408" id="drive-tag">your push</text></g>
+        <g id="arrow-drag" opacity="0"><path id="arc-drag" class="arc drag" marker-end="url(#ah-drag)"/><text class="tag drag" x="270" y="100" text-anchor="middle">magnetic drag</text></g>
+
+        <!-- voltmeter + terminals -->
+        <g id="a-meter" class="p-meter" data-explain="induction,faster,stopped">
+          <text class="tiny" x="620" y="80" text-anchor="middle">VOLTMETER</text>
+          <rect class="meter" x="552" y="88" width="136" height="124" rx="14"/>
+          <g id="ticks"></g>
+          <line id="needle" x1="620" y1="170" x2="620" y2="122"/>
+          <circle cx="620" cy="170" r="5" fill="#e9edf7"/>
+          <text id="volt-text" x="620" y="201" text-anchor="middle">0.0 V</text>
+          <path class="mlead" d="M600 212V242M652 212V296H608"/>
+        </g>
+        <g id="a-terminals" data-explain="circuit">
+          <circle class="terminal" cx="600" cy="250" r="8"/><circle class="terminal" cx="600" cy="296" r="8"/>
+          <path class="wire lead" id="lead0" d="M608 250H700" hidden/>
+          <path class="wire lead" id="lead1" d="M608 296H700" hidden/>
+          <text class="tiny" id="tohouse" x="654" y="278" text-anchor="middle" hidden>to the house ▸</text>
+        </g>
+
+        <!-- voltage trace -->
+        <g id="a-scope" hidden data-explain="waveform">
+          <rect class="scope" x="552" y="330" width="136" height="84" rx="10"/>
+          <line x1="558" y1="372" x2="682" y2="372" stroke="#2a3558" stroke-width="1"/>
+          <path id="scope-path" d=""/>
+          <text class="tiny" x="620" y="428" text-anchor="middle">voltage over time</text>
+        </g>
+
+        <!-- inspect badges -->
+        <g class="hot-i" id="h-poles" data-inspect="poles" tabindex="0" role="button" aria-label="Inspect the magnet’s N and S poles" hidden><circle cx="170" cy="126" r="11"/><text x="170" y="131">i</text></g>
+        <g class="hot-i" id="h-coating" data-inspect="coating" tabindex="0" role="button" aria-label="Inspect the wire’s insulating coating" hidden><circle cx="470" cy="134" r="11"/><text x="470" y="139">i</text></g>
+        <g class="hot-i" id="h-scope" data-inspect="waveform" tabindex="0" role="button" aria-label="Inspect the voltage trace" hidden><circle cx="684" cy="334" r="11"/><text x="684" y="339">i</text></g>
+
+        <!-- drop zones (active only while placing a part) -->
+        <g id="zones">
+          <circle class="zone" data-zone="rotor" data-accept="magnet" cx="270" cy="190" r="62" role="button" aria-label="Rotor shaft, between the coil forms"/>
+          <rect class="zone" data-zone="coilL" data-accept="wire core" x="56" y="140" width="154" height="100" rx="12" role="button" aria-label="Left coil form"/>
+          <rect class="zone" data-zone="coilR" data-accept="wire core" x="330" y="140" width="154" height="100" rx="12" role="button" aria-label="Right coil form"/>
+          <circle class="zone" data-zone="crank" data-accept="crank" cx="270" cy="372" r="46" role="button" aria-label="Drive wheel mount"/>
+          <rect class="zone" data-zone="term0" data-accept="lead" x="590" y="234" width="110" height="32" rx="10" role="button" aria-label="Upper output terminal"/>
+          <rect class="zone" data-zone="term1" data-accept="lead" x="590" y="280" width="110" height="32" rx="10" role="button" aria-label="Lower output terminal"/>
+        </g>
+      </svg>
+      <p class="fine">Top-down view. Rotation is drawn slower than real speed so you can follow it.</p>
+    </section>
+
+    <section class="house card" aria-label="House">
+      <svg id="house" viewBox="0 0 440 440" role="group" aria-label="House cutaway with three rooms">
+        <defs>
+          <radialGradient id="glow0" cx="170" cy="286" r="150" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff3c4"/><stop offset=".35" stop-color="#ffcf6b"/><stop offset="1" stop-color="#b9701c"/></radialGradient>
+          <radialGradient id="glow1" cx="330" cy="286" r="150" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff3c4"/><stop offset=".35" stop-color="#ffcf6b"/><stop offset="1" stop-color="#b9701c"/></radialGradient>
+          <radialGradient id="glow2" cx="250" cy="166" r="170" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff3c4"/><stop offset=".35" stop-color="#ffcf6b"/><stop offset="1" stop-color="#b9701c"/></radialGradient>
+        </defs>
+        <g class="rain" aria-hidden="true" id="rain"></g>
+        <rect x="0" y="404" width="440" height="36" fill="#0d1322"/>
+        <!-- supply bus and parallel branches -->
+        <g id="bus">
+          <path class="hwire" id="bus-main" d="M0 420H40V190"/>
+          <path class="hwire" id="br-0" d="M40 330H90"/>
+          <path class="hwire" id="br-1" d="M40 420H424V330H410"/>
+          <path class="hwire" id="br-2" d="M40 190H130"/>
+          <text class="tiny" x="6" y="412">from the generator</text>
+          <g class="swg" id="swg-0"><circle cx="54" cy="330" r="3"/><circle cx="76" cy="330" r="3"/><line x1="54" y1="330" x2="76" y2="330"/></g>
+          <g class="swg" id="swg-1"><circle cx="300" cy="420" r="3"/><circle cx="322" cy="420" r="3"/><line x1="300" y1="420" x2="322" y2="420"/></g>
+          <g class="swg" id="swg-2"><circle cx="74" cy="190" r="3"/><circle cx="96" cy="190" r="3"/><line x1="74" y1="190" x2="96" y2="190"/></g>
+        </g>
+        <!-- shell -->
+        <path d="M62 152 250 40 438 152Z" fill="#232c47" stroke="#39456b" stroke-width="3" stroke-linejoin="round"/>
+        <rect x="330" y="62" width="26" height="50" fill="#232c47" stroke="#39456b" stroke-width="3"/>
+        <rect x="90" y="150" width="320" height="254" fill="#0f1526" stroke="#39456b" stroke-width="3"/>
+
+        <g class="room" id="room-2" data-room="2">
+          <rect class="rbase" x="130" y="152" width="240" height="118"/>
+          <rect class="rglow" x="130" y="152" width="240" height="118" fill="url(#glow2)"/>
+          <g class="furn"><rect x="160" y="232" width="120" height="22" rx="5"/><rect x="152" y="212" width="16" height="58" rx="4"/><rect x="170" y="222" width="38" height="14" rx="6"/><rect x="312" y="226" width="34" height="44" rx="3"/></g>
+          <line class="cord" x1="250" y1="152" x2="250" y2="164"/><circle class="bulb-off" cx="250" cy="170" r="8"/><circle class="bulb-on" cx="250" cy="170" r="8"/>
+          <text class="rname" x="138" y="168">Bedroom</text><text class="rpct" x="362" y="168" text-anchor="end"></text>
+          <text class="rlock" x="250" y="216" text-anchor="middle">not wired yet</text>
+          <rect class="rhit" x="130" y="152" width="240" height="118"/>
+        </g>
+        <g class="room" id="room-0" data-room="0">
+          <rect class="rbase" x="92" y="272" width="157" height="130"/>
+          <rect class="rglow" x="92" y="272" width="157" height="130" fill="url(#glow0)"/>
+          <g class="furn"><rect x="108" y="362" width="92" height="30" rx="8"/><rect x="104" y="350" width="14" height="42" rx="5"/><rect x="190" y="350" width="14" height="42" rx="5"/><rect x="218" y="340" width="6" height="52"/><path d="M208 340h26l-6-18h-14z"/></g>
+          <line class="cord" x1="170" y1="272" x2="170" y2="284"/><circle class="bulb-off" cx="170" cy="290" r="8"/><circle class="bulb-on" cx="170" cy="290" r="8"/>
+          <text class="rname" x="99" y="288">Living room</text><text class="rpct" x="243" y="288" text-anchor="end"></text>
+          <text class="rlock" x="170" y="330" text-anchor="middle">not wired yet</text>
+          <rect class="rhit" x="92" y="272" width="157" height="130"/>
+        </g>
+        <g class="room" id="room-1" data-room="1">
+          <rect class="rbase" x="251" y="272" width="157" height="130"/>
+          <rect class="rglow" x="251" y="272" width="157" height="130" fill="url(#glow1)"/>
+          <g class="furn"><rect x="356" y="318" width="40" height="74" rx="4"/><rect x="270" y="356" width="70" height="6" rx="2"/><rect x="276" y="362" width="5" height="30"/><rect x="329" y="362" width="5" height="30"/></g>
+          <line class="cord" x1="330" y1="272" x2="330" y2="284"/><circle class="bulb-off" cx="330" cy="290" r="8"/><circle class="bulb-on" cx="330" cy="290" r="8"/>
+          <text class="rname" x="258" y="288">Kitchen</text><text class="rpct" x="402" y="288" text-anchor="end"></text>
+          <text class="rlock" x="330" y="330" text-anchor="middle">not wired yet</text>
+          <rect class="rhit" x="251" y="272" width="157" height="130"/>
+        </g>
+        <path d="M90 271H410M250 271V404" stroke="#39456b" stroke-width="3"/>
+      </svg>
+      <div class="switches" id="switches"></div>
+    </section>
+  </main>
+
+  <div class="crewline" id="crew" aria-live="polite"><span class="who"></span><span class="say"></span></div>
+
+  <footer class="deck">
+    <div class="panel" id="crank-box">
+      <button id="crank-btn" class="crank-btn" type="button" disabled>
+        <span class="cb-main">Crank</span><span class="cb-sub">click · hold · Space</span>
+      </button>
+      <div class="crank-side">
+        <label class="latch" id="latch-box" hidden><input type="checkbox" id="latch"> <span>Keep cranking</span></label>
+        <div id="effort-box" hidden>
+          <label for="effort">How hard you push <output id="effort-out">50%</output></label>
+          <input type="range" id="effort" min="20" max="100" step="5" value="50">
+        </div>
+        <p class="hint" id="crank-hint">Build the generator first.</p>
+      </div>
+    </div>
+
+    <div class="panel" id="meters">
+      <div class="mrow" id="row-rpm" hidden><span>Rotor speed</span><b><span id="m-rpm">0</span> rpm</b></div>
+      <div class="mrow" id="row-effort" hidden><span>Your effort</span><div class="bar"><i id="m-effort"></i></div></div>
+      <div class="mrow" id="row-demand" hidden><span>Connected lighting</span><b id="m-demand">none</b></div>
+      <div id="power-box" hidden>
+        <div class="mrow"><span>Work going in</span><b><span id="m-pin">0</span> W</b></div>
+        <div class="split" aria-hidden="true"><i id="m-split-load"></i><i id="m-split-heat"></i></div>
+        <div class="legend"><span class="k load">reaching lamps <b id="m-pload">0</b> W</span><span class="k heat">lost as heat <b id="m-pheat">0</b> W</span></div>
+      </div>
+      <p class="hint" id="meters-hint">Readings appear as the machine comes together.</p>
+    </div>
+
+    <div class="panel" id="side">
+      <h2 id="side-title">Parts tray</h2>
+      <div id="tray"></div>
+      <div id="shop" hidden></div>
+      <div id="notes" hidden></div>
+    </div>
+  </footer>
+</div>
+
+<!-- overlays -->
+<div id="intro" class="overlay intro" role="dialog" aria-modal="true" aria-labelledby="intro-title">
+  <div class="flash" id="flash"></div>
+  <div class="intro-card">
+    <h1 id="intro-title">Lights Back On</h1>
+    <p class="sub" id="intro-sub"></p>
+    <div id="intro-lines"></div>
+    <div class="intro-btns">
+      <button id="intro-start" class="primary" type="button">Start building</button>
+      <button id="intro-skip" class="ghost" type="button">Skip intro</button>
+    </div>
+  </div>
+</div>
+
+<div id="ring" class="ring" hidden></div>
+<div id="bubble" class="bubble" role="dialog" aria-labelledby="bubble-title" hidden>
+  <div class="b-arrow" id="b-arrow"></div>
+  <div class="b-topic" id="bubble-topic"></div>
+  <h3 id="bubble-title"></h3>
+  <p id="bubble-body"></p>
+  <div id="bubble-fig"></div>
+  <div class="b-foot"><span class="b-pause" id="bubble-pause">Paused while you read</span><button id="bubble-ok" class="primary" type="button">Got it</button></div>
+</div>
+
+<div id="predict" class="overlay" role="dialog" aria-modal="true" aria-labelledby="predict-title" hidden>
+  <div class="modal"><h2 id="predict-title"></h2><p id="predict-q"></p><div id="predict-opts" class="opts"></div><p class="hint">The generator is paused while you choose.</p></div>
+</div>
+
+<aside id="log" class="drawer" role="dialog" aria-labelledby="log-title" hidden>
+  <div class="drawer-head"><h2 id="log-title">Explanation log</h2><button id="log-close" class="ghost" type="button">Close</button></div>
+  <p class="hint">Everything the team has explained so far. Select one to see it again on the machine.</p>
+  <div id="log-body"></div>
+</aside>
+
+<div id="ending" class="overlay" role="dialog" aria-modal="true" aria-labelledby="end-title" hidden>
+  <div class="modal end"><h2 id="end-title"></h2><p id="end-lead" class="lead"></p><ul id="end-recap"></ul>
+    <div class="intro-btns"><button id="end-continue" class="primary" type="button">Keep experimenting</button><button id="end-restart" class="ghost" type="button">Restart</button></div>
+    <p class="fine" id="end-credits"></p></div>
+</div>
+
+<div id="toast" class="toast" role="status" hidden></div>
+<div id="ghost" class="ghost-part" hidden></div>
+
+<script>
+/*__SIM__*/
+</script>
+<script>
+/*__CONTENT__*/
+</script>
+<script>
+/*__GAME__*/
+</script>
+</body>
+</html>
