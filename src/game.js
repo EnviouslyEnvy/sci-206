@@ -28,7 +28,7 @@
       rooms: [false, false, false], roomOpen: [false, false, false], disp: [0, 0, 0],
       effort: 0, holding: false, latch: false, level: 0.5,
       rot: { omega: 0, theta: 0 }, vis: 0, out: null, t: 0,
-      flags: {}, timers: {}, prediction: null, peakOpenV: 0, selected: null,
+      flags: {}, timers: {}, prediction: null, predTries: 0, peakOpenV: 0, selected: null,
       ended: false, bench: {}, endStats: null
     };
   }
@@ -61,7 +61,8 @@
   function crew(key) {
     var line = C.crew[key]; if (!line) return;
     var c = $('crew');
-    c.querySelector('.who').textContent = line[0] + ':';
+    var av = c.querySelector('.av'); av.textContent = line[0].charAt(0); av.dataset.w = line[0];
+    c.querySelector('.who').textContent = line[0];
     c.querySelector('.say').textContent = line[1];
     c.classList.remove('pop'); void c.offsetWidth; c.classList.add('pop');
   }
@@ -235,7 +236,7 @@
         if (n >= 2 && o.I > 0.05) {
           if (!g.seen.heavier) {
             T.a = (T.a || 0) + dt;
-            if (T.a > 2.2) { award(1); show('heavier', function () { f.arrow = true; crew(g.prediction === 'more' ? 'predictRight' : 'predictWrong'); }); }
+            if (T.a > 2.2) { award(1); show('heavier', function () { f.arrow = true; crew(g.predTries === 0 ? 'predictRight' : 'predictRetry'); }); }
           } else if (!g.seen.lenz) {
             T.b = (T.b || 0) + dt;
             if (T.b > 2.2) { award(1); show('lenz', function () { f.slider = true; syncUI(); show('balance', function () { f.shop = true; setStage('balance'); }); }); }
@@ -267,7 +268,7 @@
     var R = C.ending.recap, items = [R.built];
     items.push(fmt(R.open, { v: g.peakOpenV.toFixed(0) }));
     items.push(R.stopped, R.load);
-    items.push(g.prediction === 'more' ? R.predictRight : R.predictWrong);
+    items.push(g.predTries === 0 ? R.predictRight : R.predictRetry);
     var ups = Object.keys(g.upg).filter(function (k) { return g.upg[k]; }).map(function (k) { return C.upgrades[k].name.toLowerCase(); });
     if (ups.length) items.push(fmt(R.upgrades, { list: ups.join(', ') }));
     items.push(fmt(R.budget, g.endStats));
@@ -297,14 +298,14 @@
       html += '<button type="button" class="part' + (g.selected === p ? ' sel' : '') + '" data-part="' + p + '" data-i="' + i + '" aria-pressed="' + (g.selected === p) + '">' +
         ICON[p] + '<b>' + C.parts[p].name + '</b><small>' + C.parts[p].hint + '</small></button>';
     });
-    if (g.winding) html += '<button type="button" class="windbtn" id="windbtn"><i style="width:' + (g.wind / 12 * 100) + '%"></i><span>Wind the wire — click or hold</span></button>';
+    if (g.winding) html += '<button type="button" class="windbtn" id="windbtn"><i style="width:' + (g.wind / 12 * 100) + '%"></i><span>Wind — click or hold</span></button>';
     if (!html && g.stage === 'assemble') html = '<p class="hint">All parts are on the bench.</p>';
     t.innerHTML = html;
   }
   function select(part) {
     g.selected = g.selected === part ? null : part;
     renderTray(); markZones(g.selected);
-    if (g.selected) toast('Now choose where the ' + C.parts[g.selected].name.toLowerCase() + ' goes on the bench.');
+    if (g.selected) toast('Tap where the ' + C.parts[g.selected].name.toLowerCase() + ' goes.');
   }
   function zoneFree(z, part) {
     var name = z.getAttribute('data-zone');
@@ -476,7 +477,7 @@
     var P = C.prediction;
     $('predict-title').textContent = P.title; $('predict-q').textContent = P.question;
     $('predict-opts').innerHTML = P.options.map(function (o) { return '<button type="button" data-p="' + o.id + '">' + o.label + '</button>'; }).join('');
-    modal.predict = true; g.holding = false; $('predict').hidden = false;
+    $('predict-fb').textContent = ''; modal.predict = true; g.holding = false; $('predict').hidden = false;
     $('predict-opts').querySelector('button').focus();
   }
   function bindRooms() {
@@ -484,7 +485,14 @@
     $('house').addEventListener('click', function (e) { var r = e.target.closest('.room'); if (r) toggleRoom(+r.getAttribute('data-room')); });
     $('predict-opts').addEventListener('click', function (e) {
       var b = e.target.closest('[data-p]'); if (!b) return;
-      g.prediction = b.getAttribute('data-p'); modal.predict = false; $('predict').hidden = true;
+      var opt = C.prediction.options.filter(function (o) { return o.id === b.getAttribute('data-p'); })[0];
+      if (!opt.right) {                       // wrong answer: explain, stay on the question
+        g.predTries++; b.disabled = true; b.classList.add('wrong');
+        $('predict-fb').textContent = opt.feedback; Audio.tick();
+        var next = $('predict-opts').querySelector('button:not(:disabled)'); if (next) next.focus();
+        return;
+      }
+      g.prediction = opt.id; modal.predict = false; $('predict').hidden = true; Audio.chime(660, 990);
       g.rooms[1] = true; toast(C.prediction.after); syncUI();
       var sw = document.querySelector('.sw[data-room="1"]'); if (sw) sw.focus();
     });
@@ -526,7 +534,7 @@
     var ids = ['turns', 'magnet', 'loss']; if (g.ended) ids.push('wind');
     s.innerHTML = ids.map(function (id) {
       var U = C.upgrades[id], owned = id === 'wind' ? g.windDrive : g.upg[id], poor = !owned && g.supplies < U.cost;
-      var cost = id === 'wind' ? (g.windDrive ? 'Running — click to go back to the crank' : 'Free — click to mount') : owned ? 'Fitted' : U.cost + ' supplies';
+      var cost = id === 'wind' ? (g.windDrive ? 'Running — tap to remove' : 'Free') : owned ? 'Fitted' : U.cost + ' supplies';
       return '<button type="button" class="up' + (owned && id !== 'wind' ? ' owned' : '') + (poor ? ' poor' : '') + '" data-up="' + id + '"' +
         (owned && id !== 'wind' ? ' aria-disabled="true"' : '') + '><b>' + U.name + '</b><small>' + U.blurb + '</small><span class="cost">' + cost + '</span></button>';
     }).join('');
@@ -609,18 +617,18 @@
     $('latch-box').hidden = !b || g.windDrive || st === 'stop';
     $('effort-box').hidden = !g.flags.slider || g.windDrive;
     $('crank-hint').textContent = !b ? 'Build the generator first.' : g.windDrive ? 'The wind is doing the turning.' :
-      st === 'stop' ? 'Hands off the crank…' : 'Each click is a push. Hold to keep turning.';
+      st === 'stop' ? 'Hands off…' : 'Click to push. Hold to keep turning.';
     $('row-rpm').hidden = !b; $('row-effort').hidden = !b;
     $('row-demand').hidden = g.leads < 2; $('power-box').hidden = !g.seen.load;
     $('meters-hint').hidden = b;
     // side panel: tray -> notes -> shop
     var showTray = st === 'assemble' || st === 'wire', showShop = !!g.flags.shop;
     $('tray').hidden = !showTray; $('shop').hidden = showTray || !showShop; $('notes').hidden = showTray || showShop;
-    $('side-title').textContent = showTray ? 'Parts tray' : showShop ? 'Upgrades — spend supplies' : 'Field notes';
+    $('side-title').textContent = showTray ? 'Parts tray' : showShop ? 'Upgrades' : 'Field notes';
     if (!$('notes').hidden) {
       var last3 = g.order.slice(-3).reverse();
       $('notes').innerHTML = '<ul>' + last3.map(function (id) { return '<li><button type="button" data-b="' + id + '">' + BUB[id].title + '</button></li>'; }).join('') +
-        '</ul><p class="hint">Tap a glowing <b>i</b> on the machine to inspect a part. Each discovery earns a supply.</p>';
+        '</ul><p class="hint">Tap a glowing <b>i</b> on the machine. Each discovery earns +1 supply.</p>';
     }
     renderShop();
     // switches
@@ -761,7 +769,7 @@
     modal.predict = modal.ending = modal.log = false;
     ['bubble', 'ring', 'predict', 'ending', 'log', 'toast', 'supplies-box'].forEach(function (id) { $(id).hidden = true; });
     $('latch').checked = false; $('effort').value = 50; $('effort-out').textContent = '50%';
-    $('crew').querySelector('.who').textContent = ''; $('crew').querySelector('.say').textContent = '';
+    $('crew').querySelector('.who').textContent = ''; $('crew').querySelector('.say').textContent = ''; $('crew').querySelector('.av').textContent = '';
     markZones(null); syncUI(); startIntro();
   }
 

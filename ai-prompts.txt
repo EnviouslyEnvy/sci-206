@@ -577,3 +577,17 @@ Fix issues you find and deliver the implementation, not just a design proposal.
 
 | Inspect efficiency or upgrade components. | **Why doesn’t everything reach the lights?** | Some of your input warms the wires through electrical resistance. Friction also warms moving parts. Better components can reduce those losses, leaving more energy available for the rooms. |
 
+==================== PROMPT 2 ====================
+
+(Group feedback pasted from chat, then:)
+
+1. the caption bubbles need some revision they're trying to sound too clever LOL they need to be a bit more matter of fact cause it's kind of hard to understand some
+
+2. the question popup progresses even if you pick the wrong ans
+
+3. wait its kind of ugly but its got it
+
+4. i feel like we could do a prompt or smth to make all the words more concise and game-y
+
+after that can you let me preview it before pushing it to the repo
+
