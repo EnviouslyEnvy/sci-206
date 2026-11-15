@@ -713,3 +713,17 @@ Tool: ChatGPT/Codex (OpenAI).
 
 commit and push it, add to prompt history
 
+==================== PROMPT 16 ====================
+
+Tool: ChatGPT/Codex (OpenAI).
+
+I revised many of the caption boxes text. They were either lacking some flavour/personality or originality, or some matter-of-fact rigour. I wanted to insert more of my own knowledge back into this. See an attached document.
+
+Supplied reference: Pasted captions.docx, using the full titles and bodies from the "My suggestion" column for all 20 captions.
+
+==================== PROMPT 17 ====================
+
+Tool: ChatGPT/Codex (OpenAI).
+
+When you click on the bar magnet after it's placed, can you create a small visual of the magnetic field it produces from a top down view with animated little arrows?
+
