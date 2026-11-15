@@ -32,6 +32,7 @@
   <main class="stage">
     <section class="bench card" aria-label="Generator workbench">
       <div class="chip" id="status" role="status"></div>
+      <div id="wind-control" hidden><button type="button" class="windbtn" id="windbtn"><i></i><span>Wind the wire - click or hold</span></button></div>
       <svg id="gen" viewBox="0 0 700 440" role="group" aria-label="Generator, seen from above">
         <defs>
           <linearGradient id="g-copper" x1="0" x2="1"><stop offset="0" stop-color="#8d4519"/><stop offset=".45" stop-color="#f3a970"/><stop offset="1" stop-color="#9a4d1e"/></linearGradient>
@@ -69,9 +70,11 @@
           <g id="turnsR"></g>
           <rect class="flange" x="339" y="143" width="6" height="94" rx="2"/><rect class="flange" x="453" y="143" width="6" height="94" rx="2"/>
         </g>
-        <g id="field" class="p-magnet">
-          <line id="fieldL" class="field" x1="141" y1="190" x2="141" y2="190" marker-end="url(#ah-field)"/>
-          <line id="fieldR" class="field" x1="399" y1="190" x2="399" y2="190" marker-end="url(#ah-field)"/>
+        <g id="field" class="p-magnet" hidden>
+          <g id="field-arrows">
+            <line id="fieldL" class="field" x1="141" y1="190" x2="141" y2="190" marker-end="url(#ah-field)"/>
+            <line id="fieldR" class="field" x1="399" y1="190" x2="399" y2="190" marker-end="url(#ah-field)"/>
+          </g>
           <text class="tiny p-wire" x="141" y="250" text-anchor="middle">field through coil</text>
           <text class="tiny p-wire" x="399" y="250" text-anchor="middle">field through coil</text>
         </g>

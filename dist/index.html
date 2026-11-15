@@ -38,6 +38,8 @@ body.objectives-open #app{min-width:0;min-height:calc(100vh - 24px);width:100%;m
 #objectives-history .objective-entry.current{padding:14px;background:#302b20;border:2px solid var(--amber);color:#fff4d6;box-shadow:0 0 20px #ffbe5515}
 #objectives-history .objective-entry.current .obj-tag{display:inline-block;font-size:10px;margin-bottom:10px}
 #objectives-history .objective-entry.current p{font-size:17px;font-weight:750}
+#objectives-history .objective-entry.current.objective-arrival{animation:objective-arrival 1s ease-in-out 2}
+@keyframes objective-arrival{0%,100%{border-color:var(--amber);background:#302b20;box-shadow:0 0 20px #ffbe5515}50%{border-color:#ffe6a3;background:#44371e;box-shadow:0 0 22px #ffbe5570,inset 0 0 12px #ffbe551a}}
 @media (min-width:981px) and (max-width:1280px){body.objectives-open .stage{grid-template-columns:1fr}body.objectives-open .deck{grid-template-columns:1fr}}
 @media (max-width:720px){body.objectives-open #layout{display:block;padding:0}.objectives-panel{position:relative;top:auto;height:45vh;margin:8px 8px 0;max-height:45vh}#objectives-history .objective-entry.current p{font-size:16px}body.objectives-open #app{margin:0 auto}}
 .obj-tag{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#0b1020;background:var(--amber);border-radius:999px;padding:2px 8px;font-weight:800}
@@ -191,10 +193,18 @@ input[type=range]{width:100%;height:32px;accent-color:var(--amber)}
 .legend b{color:var(--ink)}
 
 #tray{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:8px}
+#tray{position:relative}
+#tray.attention::after{content:"";position:absolute;inset:-6px;border:3px solid var(--amber);border-radius:16px;pointer-events:none;animation:tray-pulse 1.4s ease-in-out infinite}
+@keyframes tray-pulse{0%,100%{opacity:.45}50%{opacity:1}}
+#wind-control{position:absolute;z-index:3;width:min(300px,calc(100% - 24px));transform:translateX(-50%)}
+#wind-control .windbtn{width:100%}
+.bench.winding #gen{min-height:360px}
 .part{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:8px;min-height:74px;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;touch-action:none}
 .part svg{width:64px;height:30px;min-height:0;max-height:none}
 .part b{font-size:13px} .part small{font-size:11px;color:var(--mute)}
 .part:hover{border-color:var(--amber)}
+.part.new-wire{position:relative;border-color:var(--amber)}
+.part.new-wire::after{content:"";position:absolute;inset:-3px;border:2px solid var(--amber);border-radius:14px;pointer-events:none;animation:tray-pulse 1.4s ease-in-out infinite}
 .part.sel{border-color:var(--amber);background:#2a2413;box-shadow:0 0 0 2px #ffbe5555}
 .windbtn{grid-column:1/-1;background:#2a2413;border:2px solid var(--amber);border-radius:12px;padding:12px;font-weight:800;min-height:56px;position:relative;overflow:hidden;touch-action:none}
 .windbtn i{position:absolute;left:0;top:0;bottom:0;background:#ffbe5533;width:0}
@@ -239,7 +249,7 @@ input[type=range]{width:100%;height:32px;accent-color:var(--amber)}
 @keyframes ringp{50%{border-color:#fff}}
 .bubble{position:fixed;z-index:61;width:min(350px,calc(100vw - 24px));background:#fdf8ec;color:#1c1a14;border-radius:16px;padding:14px 16px 12px;box-shadow:0 14px 40px #000a}
 .bubble h3{margin:2px 0 6px;font-size:18px;line-height:1.2}
-.bubble p{margin:0;font-size:14.5px}
+.bubble p{margin:0;font-size:14.5px;white-space:pre-line}
 .b-topic{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#8a6a2a;font-weight:800}
 .b-arrow{position:absolute;width:16px;height:16px;background:#fdf8ec;transform:rotate(45deg)}
 .b-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px}
@@ -278,7 +288,7 @@ input[type=range]{width:100%;height:32px;accent-color:var(--amber)}
   .brand span{display:none}
 }
 @media (prefers-reduced-motion: reduce){
-  .rain,.hot-i.new circle,.ring,.chip::before,#gen.placing .zone.hot{animation:none!important}
+  .rain,.hot-i.new circle,.ring,.chip::before,#gen.placing .zone.hot,#tray.attention::after,.part.new-wire::after,#objectives-history .objective-entry.current.objective-arrival{animation:none!important}
   .flash.go{animation:none}
   *{transition:none!important}
 }
@@ -309,6 +319,7 @@ input[type=range]{width:100%;height:32px;accent-color:var(--amber)}
   <main class="stage">
     <section class="bench card" aria-label="Generator workbench">
       <div class="chip" id="status" role="status"></div>
+      <div id="wind-control" hidden><button type="button" class="windbtn" id="windbtn"><i></i><span>Wind the wire - click or hold</span></button></div>
       <svg id="gen" viewBox="0 0 700 440" role="group" aria-label="Generator, seen from above">
         <defs>
           <linearGradient id="g-copper" x1="0" x2="1"><stop offset="0" stop-color="#8d4519"/><stop offset=".45" stop-color="#f3a970"/><stop offset="1" stop-color="#9a4d1e"/></linearGradient>
@@ -346,9 +357,11 @@ input[type=range]{width:100%;height:32px;accent-color:var(--amber)}
           <g id="turnsR"></g>
           <rect class="flange" x="339" y="143" width="6" height="94" rx="2"/><rect class="flange" x="453" y="143" width="6" height="94" rx="2"/>
         </g>
-        <g id="field" class="p-magnet">
-          <line id="fieldL" class="field" x1="141" y1="190" x2="141" y2="190" marker-end="url(#ah-field)"/>
-          <line id="fieldR" class="field" x1="399" y1="190" x2="399" y2="190" marker-end="url(#ah-field)"/>
+        <g id="field" class="p-magnet" hidden>
+          <g id="field-arrows">
+            <line id="fieldL" class="field" x1="141" y1="190" x2="141" y2="190" marker-end="url(#ah-field)"/>
+            <line id="fieldR" class="field" x1="399" y1="190" x2="399" y2="190" marker-end="url(#ah-field)"/>
+          </g>
           <text class="tiny p-wire" x="141" y="250" text-anchor="middle">field through coil</text>
           <text class="tiny p-wire" x="399" y="250" text-anchor="middle">field through coil</text>
         </g>
@@ -717,15 +730,15 @@ window.CONTENT = {
 
   bubbles: [
     { id: 'magnet', topic: 'Building the generator', anchor: 'a-rotor', source: 'supplied',
-      trigger: 'Place the permanent magnet',
+      trigger: 'Select the permanent magnet from the parts tray',
       title: 'No batteries required',
       body: 'A fridge magnet can hold your shopping list all week without a battery. This magnet keeps its magnetic field too—but that alone won’t power our lights.' },
     { id: 'poles', topic: 'Building the generator', anchor: 'a-rotor', source: 'supplied',
       trigger: 'Inspect the N/S labels (tap the ⓘ by the magnet)',
       title: 'Two ends, two poles',
       body: 'These labels mark the magnet’s north and south poles. We’ll mount it so those poles sweep past the coils as it turns.' },
-    { id: 'winding', topic: 'Building the generator', anchor: 'a-coilL', source: 'supplied',
-      trigger: 'Finish winding the insulated wire',
+    { id: 'winding', topic: 'Building the generator', anchor: 'a-coilL', position: 'top', source: 'supplied',
+      trigger: 'Select the wire before placing and winding it on the coils',
       title: 'Every wrap counts',
       body: 'Wind the wire as you’d wind thread around a spool. Each wrap is a turn. Many turns together make a coil; this cylindrical winding is called a solenoid.' },
     { id: 'coating', topic: 'Building the generator', anchor: 'a-coilR', source: 'supplied', figure: 'coating',
@@ -733,11 +746,11 @@ window.CONTENT = {
       title: 'Close together, electrically separate',
       body: 'The wire has a thin insulating coating. It lets us pack the turns tightly while keeping current from taking shortcuts between neighboring turns.' },
     { id: 'core', topic: 'Building the generator', anchor: 'a-coreL', source: 'supplied', figure: 'bench',
-      trigger: 'Insert the soft iron cores',
+      trigger: 'Select the soft iron cores from the parts tray',
       title: 'More than a support',
       body: 'This iron isn’t just holding the wire in place. It guides more of the magnet’s field through the winding, helping the coil produce voltage when that field changes.' },
     { id: 'crank', topic: 'Building the generator', anchor: 'a-crank', source: 'supplied',
-      trigger: 'Attach the crank',
+      trigger: 'Select the crank from the parts tray',
       title: 'You’re the power station',
       body: 'For now, your hand supplies the energy. Turning the crank does mechanical work, which the generator can convert into electrical energy.' },
 
@@ -745,24 +758,26 @@ window.CONTENT = {
       trigger: 'Spin the magnet until the meter responds',
       title: 'Something is changing',
       body: 'The turning magnet changes the magnetic field passing through the coil’s loops. That produces a voltage between the wire’s ends. This process is electromagnetic induction.' },
-    { id: 'faster', topic: 'Making voltage', anchor: 'a-meter', source: 'supplied',
+    { id: 'faster', topic: 'Making voltage', anchor: 'a-meter', source: 'edited',
       trigger: 'Crank harder so the rotor speeds up',
-      title: 'Same machine, faster motion',
-      body: 'Faster rotation makes the field through the coil change more quickly. With the same winding and magnet, the induced voltage rises.' },
-    { id: 'stopped', topic: 'Making voltage', anchor: 'a-meter', source: 'supplied',
+      note: "Revised at user request; winding count is described as number of turns.",
+      title: "Faster spin makes greater voltage generation?",
+      body: "Rotating the magnet faster makes the field through the coil change more quickly. As a result of the faster-changing field, the induced voltage rises, assuming the same coil winding (number of turns) and magnet strength." },
+    { id: 'stopped', topic: 'Making voltage', anchor: 'a-meter', source: 'edited',
       trigger: 'Let the rotor coast to a stop',
-      title: 'Still magnetic. No output.',
-      body: 'The magnet hasn’t lost its magnetism. The field through the coil has simply stopped changing. A stronger stationary magnet wouldn’t solve that—we need the change.' },
+      note: "Revised at user request to emphasize that stopped rotation removes the changing field.",
+      title: "No field change? No output.",
+      body: "The field through the coil has stopped changing, so the induced voltage settles back to 0.\n\nThe permanent magnet has not lost its strength. The spinning has stopped, so it is no longer changing the magnetic field through the coils. Even a stronger magnet would not generate voltage here if that field was not changing." },
     { id: 'waveform', topic: 'Making voltage', anchor: 'a-scope', source: 'supplied',
       trigger: 'Inspect the voltage trace (tap the ⓘ on the small screen)',
       title: 'Taking turns in each direction',
       body: 'As the north and south poles trade places, the voltage reverses polarity. With the circuit connected, current reverses too. That’s alternating current, or AC.' },
 
     { id: 'circuit', topic: 'Circuits and loads', anchor: 'a-terminals', source: 'edited',
-      note: 'Added “and the room’s switch closed” because in this game the room switch is a separate step from attaching the two leads.',
-      trigger: 'Connect both lead wires',
-      title: 'Finish the connection',
-      body: 'The meter showed voltage, but the bulb needs a complete circuit. With both connections made—and the room’s switch closed—current can flow through the bulb and return through the generator.' },
+      trigger: 'Select a wire before connecting the circuit',
+      note: "Revised at user request to introduce the household as the load and separate wiring from switching on a room.",
+      title: "Connect the household!",
+      body: "The household is our electrical load: its lights use the electrical energy supplied by the generator.\n\nConnect the household to both generator terminals using the two wires. Then close a room's switch to complete its circuit, allowing current to flow through the light and back to the generator." },
     { id: 'load', topic: 'Circuits and loads', anchor: 'room-0', source: 'supplied',
       trigger: 'Light the first room',
       title: 'Somewhere for the energy to go',
@@ -772,10 +787,11 @@ window.CONTENT = {
       trigger: 'Connect a second room and keep cranking',
       title: 'The crank feels heavier',
       body: 'Think of turning up the resistance on an exercise bike. Keeping the same speed now takes more effort. Here, the extra effort is needed to supply another room.' },
-    { id: 'lenz', topic: 'Load and Lenz’s law', anchor: 'a-coilR', source: 'supplied',
+    { id: 'lenz', topic: 'Load and Lenz’s law', anchor: 'a-coilR', source: 'edited',
       trigger: 'The opposing-rotation arrow appears while two rooms draw current',
+      note: 'Revised to state that load current produces an opposing torque that grows with the current, so a second room requires more crank force at the same speed.',
       title: 'Where does that extra drag come from?',
-      body: 'Current in the coils produces a magnetic field of its own. Its interaction with the spinning magnet resists the driving motion. That’s Lenz’s law showing up at the crank.' },
+      body: 'Current in the coils produces a magnetic field of its own. By Lenz’s law, that field opposes the change in magnetic field through the coils caused by the spinning magnet. The coils therefore apply a torque to the magnet opposite its direction of rotation.\n\nThe size of that torque increases with the current. A second room draws more current, so the opposing torque increases. Holding the same rotation speed then takes more force at the crank. The extra mechanical work is the electrical energy delivered to the lights.' },
     { id: 'balance', topic: 'Load and Lenz’s law', anchor: 'effort-box', source: 'supplied',
       trigger: 'Offered once the drag has been explained',
       title: 'Balance the demand',
@@ -812,7 +828,7 @@ window.CONTENT = {
     spin:     'Turn the crank and watch the voltmeter. Nothing is connected to the house yet.',
     faster:   'Crank harder. What happens to the voltage?',
     stop:     'Now let go and let the rotor coast to a stop.',
-    wire:     'Run both lead wires from the generator’s terminals to the house.',
+    wire:     'Run both wires from the generator’s terminals to the house.',
     light:    'Close the living-room switch, then crank to light it.',
     second:   'The kitchen is next. Flip its switch while you keep cranking.',
     balance:  'Get the living room and kitchen both steadily lit.',
@@ -856,7 +872,7 @@ window.CONTENT = {
     wire:   'The copper wire wraps around the two coil forms on either side of the rotor.',
     core:   'The iron cores slide inside the coil forms. They stay still with the coils.',
     crank:  'The crank mounts on the drive wheel below the rotor, where the belt runs.',
-    lead:   'Each lead wire runs from one output terminal out to the house.',
+    lead:   'Place one wire on each highlighted generator terminal. Both wires are needed to connect the household.',
     taken:  'That spot already has its part.'
   },
 
@@ -865,7 +881,7 @@ window.CONTENT = {
     wire:   { name: 'Copper wire',  hint: 'insulated, one long spool' },
     core:   { name: 'Iron cores',   hint: 'soft iron, a pair' },
     crank:  { name: 'Crank & belt', hint: 'your mechanical input' },
-    lead:   { name: 'Lead wire',    hint: 'generator to house' }
+    lead:   { name: 'Wire',    hint: 'generator to house' }
   },
 
   rooms: ['Living room', 'Kitchen', 'Bedroom'],
@@ -1024,7 +1040,7 @@ window.CONTENT = {
   /* ----------------------------- bubbles ----------------------------- */
   // show(id, after): queue an explanation. The simulation holds still while
   // any bubble is open. `after` runs once, when the bubble is dismissed.
-  function show(id, after) { queue.push({ id: id, after: after }); if (!cur) nextBubble(); }
+  function show(id, after, part) { queue.push({ id: id, after: after, part: part }); if (!cur) nextBubble(); }
   function nextBubble() {
     var q = queue.shift(); if (!q) return;
     cur = q; g.holding = false; g.windHold = false;
@@ -1032,7 +1048,7 @@ window.CONTENT = {
     if (!lastFocus) lastFocus = document.activeElement;
     $('bubble-topic').textContent = b.topic;
     $('bubble-title').textContent = b.title;
-    $('bubble-body').textContent = b.body;
+    $('bubble-body').textContent = b.body + (q.part ? '\n\n' + C.misplace[q.part] : '');
     $('bubble-fig').innerHTML = figure(b);
     $('bubble-pause').textContent = built() ? C.status.paused : '';
     $('bubble').hidden = false; $('ring').hidden = false;
@@ -1056,6 +1072,10 @@ window.CONTENT = {
       }
     }
     syncUI();
+    if (q.part && !cur && g.selected) {
+      var target = document.querySelector('#gen .zone.hot');
+      if (target) target.focus({ preventScroll: true });
+    }
   }
   function positionBubble() {
     if (!cur) return;
@@ -1066,7 +1086,8 @@ window.CONTENT = {
     ring.style.left = (r.left - 7) + 'px'; ring.style.top = (r.top - 7) + 'px';
     ring.style.width = (r.width + 14) + 'px'; ring.style.height = (r.height + 14) + 'px';
     var bw = bub.offsetWidth, bh = bub.offsetHeight, cx = r.left + r.width / 2, cy = r.top + r.height / 2, x, y, side;
-    if (vw < 720) {            // small screens: sheet at whichever end is away from the component
+    if (b.position === 'top') { side = 'top'; x = cx - bw / 2; y = r.top - gap - bh; }
+    else if (vw < 720) {            // small screens: sheet at whichever end is away from the component
       side = 'none'; x = (vw - bw) / 2; y = cy > vh / 2 ? m : vh - bh - m;
     } else if (r.right + gap + bw <= vw - m) { side = 'right'; x = r.right + gap; y = cy - bh / 2; }
     else if (r.left - gap - bw >= m) { side = 'left'; x = r.left - gap - bw; y = cy - bh / 2; }
@@ -1115,6 +1136,7 @@ window.CONTENT = {
     $('btn-objectives').setAttribute('aria-expanded', String(open));
     if (restoreFocus) $('btn-objectives').focus();
     if (open) centerObjective(false);
+    positionWindControl();
     positionBubble();
   }
   function centerObjective(animate) {
@@ -1128,7 +1150,7 @@ window.CONTENT = {
   function appendObjective(text) {
     var previous = $('objective-current');
     if (previous) {
-      previous.classList.remove('current');
+      previous.classList.remove('current', 'objective-arrival');
       previous.removeAttribute('aria-current');
       previous.removeAttribute('id');
       $('objective').removeAttribute('id');
@@ -1139,6 +1161,10 @@ window.CONTENT = {
     body.id = 'objective'; body.textContent = text;
     entry.appendChild(label); entry.appendChild(body);
     $('objectives-history').appendChild(entry);
+    if (g.stage !== 'intro' && !REDUCED) {
+      entry.classList.add('objective-arrival');
+      setTimeout(function () { entry.classList.remove('objective-arrival'); }, 2000);
+    }
     centerObjective(true);
   }
   function renderObjectives() {
@@ -1237,17 +1263,35 @@ window.CONTENT = {
   function renderTray() {
     var t = $('tray'), parts = trayParts(), html = '';
     parts.forEach(function (p, i) {
-      html += '<button type="button" class="part' + (g.selected === p ? ' sel' : '') + '" data-part="' + p + '" data-i="' + i + '" aria-pressed="' + (g.selected === p) + '">' +
+      html += '<button type="button" class="part' + (p === 'lead' ? ' new-wire' : '') + (g.selected === p ? ' sel' : '') + '" data-part="' + p + '" data-i="' + i + '" aria-pressed="' + (g.selected === p) + '">' +
         ICON[p] + '<b>' + C.parts[p].name + '</b><small>' + C.parts[p].hint + '</small></button>';
     });
-    if (g.winding) html += '<button type="button" class="windbtn" id="windbtn"><i style="width:' + (g.wind / 12 * 100) + '%"></i><span>Wind the wire — click or hold</span></button>';
     if (!html && g.stage === 'assemble') html = '<p class="hint">All parts are on the bench.</p>';
     t.innerHTML = html;
+    t.classList.toggle('attention', (g.stage === 'assemble' && !g.flags.trayStarted) || g.stage === 'wire');
+    $('wind-control').hidden = !g.winding;
+    $('wind-control').parentElement.classList.toggle('winding', g.winding);
+    positionWindControl();
+  }
+  var PART_EXPLANATIONS = { magnet: 'magnet', wire: 'winding', core: 'core', crank: 'crank', lead: 'circuit' };
+  function positionWindControl() {
+    if (!g.winding) return;
+    var left = $('a-coilL').getBoundingClientRect(), right = $('a-coilR').getBoundingClientRect();
+    var control = $('wind-control'), bench = control.parentElement.getBoundingClientRect();
+    var half = control.offsetWidth / 2;
+    control.style.left = clamp((left.left + right.right) / 2 - bench.left, half + 8, bench.width - half - 8) + 'px';
+    control.style.top = Math.max(48, Math.min(left.top, right.top) - bench.top - control.offsetHeight - 12) + 'px';
   }
   function select(part) {
+    if (cur) return;
+    g.flags.trayStarted = true;
     g.selected = g.selected === part ? null : part;
     renderTray(); markZones(g.selected);
-    if (g.selected) toast('Now choose where the ' + C.parts[g.selected].name.toLowerCase() + ' goes on the bench.');
+    if (g.selected) {
+      var id = PART_EXPLANATIONS[part];
+      if (id && !g.seen[id]) show(id, null, part);
+      else toast(C.misplace[part]);
+    }
   }
   function zoneFree(z, part) {
     var name = z.getAttribute('data-zone');
@@ -1264,33 +1308,34 @@ window.CONTENT = {
     });
   }
   function place(part, zoneEl) {
+    if (cur) return false;
     var zone = zoneEl.getAttribute('data-zone'), accept = zoneEl.getAttribute('data-accept').split(' ');
     if (accept.indexOf(part) < 0) { toast(C.misplace[part]); return false; }
     if (!zoneFree(zoneEl, part)) { toast(C.misplace.taken); return false; }
     g.selected = null; markZones(null);
-    if (part === 'magnet') { g.placed.magnet = true; crew('magnetIn'); show('magnet'); }
+    if (part === 'magnet') { g.placed.magnet = true; crew('magnetIn'); }
     else if (part === 'wire') { g.placed.wire = true; g.winding = true; crew('wireStart'); }
     else if (part === 'core') {
       g.placed.core = true; crew('coreIn');
       g.bench.core = { cap: 'Bench test · same speed, nothing connected', unit: 'V', max: S.BASE.k * REF_W,
         rows: [{ label: 'without iron', v: S.BASE.k * S.BASE.noCore * REF_W }, { label: 'with iron', v: S.BASE.k * REF_W, after: true }] };
-      show('core');
     }
-    else if (part === 'crank') { g.placed.crank = true; crew('crankIn'); show('crank'); }
+    else if (part === 'crank') { g.placed.crank = true; crew('crankIn'); }
     else if (part === 'lead') {
       g.leadAt[zone] = true; g.leads++;
       if (g.leads === 1) crew('oneWire');
-      else { crew('wired'); show('circuit', function () { openRoom(0); setStage('light'); }); }
+      else { crew('wired'); openRoom(0); setStage('light'); }
     }
     syncUI();
     if (g.winding) { var w = $('windbtn'); if (w) w.focus(); }
+    checkBuilt();
     return true;
   }
   function addWind(n) {
-    if (!g.winding) return;
+    if (!g.winding || paused()) return;
     g.wind = Math.min(12, g.wind + n); renderTurns();
     var bar = document.querySelector('#windbtn i'); if (bar) bar.style.width = (g.wind / 12 * 100) + '%';
-    if (g.wind >= 12) { g.winding = false; g.windHold = false; crew('wound'); syncUI(); show('winding'); }
+    if (g.wind >= 12) { g.winding = false; g.windHold = false; crew('wound'); syncUI(); checkBuilt(); }
   }
   function checkBuilt() {
     if (g.stage === 'assemble' && built() && !cur) { setStage('spin'); crew('built'); $('crank-btn').focus({ preventScroll: true }); }
@@ -1301,8 +1346,10 @@ window.CONTENT = {
   function bindTray() {
     var tray = $('tray'), ghost = $('ghost'), suppress = false;
     tray.addEventListener('pointerdown', function (e) {
-      var w = e.target.closest('#windbtn'); if (w) { g.windHold = true; return; }
+      if (cur) return;
       var b = e.target.closest('[data-part]'); if (!b) return;
+      var part = b.getAttribute('data-part');
+      if (!g.seen[PART_EXPLANATIONS[part]]) { select(part); return; }
       drag = { part: b.getAttribute('data-part'), x: e.clientX, y: e.clientY, moved: false, id: e.pointerId };
     });
     window.addEventListener('pointermove', function (e) {
@@ -1331,7 +1378,6 @@ window.CONTENT = {
     window.addEventListener('pointerup', end); window.addEventListener('pointercancel', end);
     tray.addEventListener('click', function (e) {
       if (suppress) return;
-      if (e.target.closest('#windbtn')) { addWind(2); return; }
       var b = e.target.closest('[data-part]'); if (b) select(b.getAttribute('data-part'));
     });
     var zones = $('zones');
@@ -1340,6 +1386,15 @@ window.CONTENT = {
       if ((e.key === 'Enter' || e.key === ' ') && g.selected) { e.preventDefault(); place(g.selected, e.target); }
     });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && g.selected && !cur) select(g.selected); });
+    var wind = $('windbtn');
+    wind.addEventListener('pointerdown', function (e) { if (!e.button && !paused()) g.windHold = true; });
+    wind.addEventListener('click', function () { addWind(2); });
+    wind.addEventListener('keydown', function (e) {
+      if ((e.key === ' ' || e.key === 'Enter') && !paused()) { e.preventDefault(); g.windHold = true; }
+    });
+    wind.addEventListener('keyup', function (e) { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); g.windHold = false; } });
+    wind.addEventListener('blur', function () { g.windHold = false; });
+    window.addEventListener('blur', function () { g.windHold = false; });
   }
 
   /* ----------------------------- controls ---------------------------- */
@@ -1369,7 +1424,7 @@ window.CONTENT = {
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape') { if (cur) closeBubble(); else if (modal.log) toggleLog(false); }
     });
-    window.addEventListener('resize', function () { positionBubble(); centerObjective(false); });
+    window.addEventListener('resize', function () { positionBubble(); centerObjective(false); positionWindControl(); });
     window.addEventListener('scroll', positionBubble, { passive: true });
 
     $('gen').addEventListener('click', function (e) {
@@ -1580,6 +1635,7 @@ window.CONTENT = {
     }
     $('supplies').textContent = g.supplies;
     $('log-count').textContent = g.order.length;
+    positionWindControl();
   }
 
   var textAcc = 0;
@@ -1596,7 +1652,11 @@ window.CONTENT = {
     var c = -Math.cos(g.vis), len = 40 * c * (g.placed.core ? 1 : S.BASE.noCore) * (g.upg.magnet ? 1.15 : 1);
     $('fieldL').setAttribute('x1', 141 - len); $('fieldL').setAttribute('x2', 141 + len);
     $('fieldR').setAttribute('x1', 399 - len); $('fieldR').setAttribute('x2', 399 + len);
-    $('field').style.opacity = Math.abs(c) < 0.08 ? 0 : 1;
+    // Reveal the field demonstration on first generation, then keep its labels
+    // visible even when the directional component passes through zero.
+    if (built() && o.E > 0.05) g.flags.fieldStarted = true;
+    hid($('field'), !g.flags.fieldStarted);
+    $('field-arrows').style.opacity = Math.abs(c) < 0.08 ? 0 : 1;
     // meter
     var V = g.placed.wire && g.wind >= 12 ? o.V : 0;
     $('needle').setAttribute('transform', 'rotate(' + (-60 + 120 * clamp(V, 0, 40) / 40).toFixed(1) + ' 620 170)');
@@ -1676,7 +1736,7 @@ window.CONTENT = {
     var dt = (now - last) / 1000; last = now;
     if (dt > 0.1) dt = 0.1;                       // never jump after time away from the tab
     if (dt < 0) dt = 0;
-    if (g.winding && g.windHold) addWind(9 * dt);
+    if (g.winding && g.windHold && !paused()) addWind(9 * dt);
     if (built() && !paused()) { acc += dt; var guard = 0; while (acc >= H && guard++ < 24 && !paused()) { tick(H); acc -= H; } if (guard >= 24) acc = 0; }
     else acc = 0;
     render(dt);

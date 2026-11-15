@@ -36,12 +36,14 @@ Everything is in `src/content.js`, then run `node build.js`.
 
 ### Changes made to the supplied bubble copy
 
-- **"Finish the connection"** — added "and the room's switch closed". In the game the
-  room switch is a separate step from attaching the two leads, so the original
-  sentence would have claimed current can flow while the switch is still open.
+- **"Connect the household!"** replaces "Finish the connection" at the user's request.
+  It introduces the household lighting as the load, then explains connecting two wires
+  and closing a room switch. "Lead wire" has been renamed "Wire" in player-facing copy.
+- **"Faster spin makes greater voltage generation?"** and **"No field change? No output."**
+  were revised at the user's request. Winding count is called "number of turns".
 - **"Fewer crank turns—with a catch"** (gear ratio) — kept in the file but unused;
   there is no gearbox in this build.
-- All other supplied bubbles are used word for word.
+- Other supplied bubble bodies are retained; assembly previews also append placement guidance.
 - Added (not from the supplied file): crew one-liners, objectives, the prediction
   question, the ending recap, and the small bench-test figures inside some bubbles.
 
@@ -105,3 +107,12 @@ It is silent when the rotor stops or the game is paused. The Sound button mutes 
 
 Engineering-team dialogue is temporarily disabled, including its box and layout row.
 To restore it, set `crewDialogue: true` in `src/content.js` and run `node build.js`.
+
+## Assembly guidance
+
+The parts tray has an outline-only yellow pulse until the first part selection.
+Selecting a new part opens its explanation and placement hint before placement;
+dragging a new part first requires dismissing that explanation. Later drags work normally.
+The winding button is positioned above the coils, with click/hold and Space/Enter input.
+The wire explanation is also anchored above the coil forms. Placement and winding completion
+advance the tutorial without repeating those part-selection explanations.

@@ -100,7 +100,7 @@
   /* ----------------------------- bubbles ----------------------------- */
   // show(id, after): queue an explanation. The simulation holds still while
   // any bubble is open. `after` runs once, when the bubble is dismissed.
-  function show(id, after) { queue.push({ id: id, after: after }); if (!cur) nextBubble(); }
+  function show(id, after, part) { queue.push({ id: id, after: after, part: part }); if (!cur) nextBubble(); }
   function nextBubble() {
     var q = queue.shift(); if (!q) return;
     cur = q; g.holding = false; g.windHold = false;
@@ -108,7 +108,7 @@
     if (!lastFocus) lastFocus = document.activeElement;
     $('bubble-topic').textContent = b.topic;
     $('bubble-title').textContent = b.title;
-    $('bubble-body').textContent = b.body;
+    $('bubble-body').textContent = b.body + (q.part ? '\n\n' + C.misplace[q.part] : '');
     $('bubble-fig').innerHTML = figure(b);
     $('bubble-pause').textContent = built() ? C.status.paused : '';
     $('bubble').hidden = false; $('ring').hidden = false;
@@ -132,6 +132,10 @@
       }
     }
     syncUI();
+    if (q.part && !cur && g.selected) {
+      var target = document.querySelector('#gen .zone.hot');
+      if (target) target.focus({ preventScroll: true });
+    }
   }
   function positionBubble() {
     if (!cur) return;
@@ -142,7 +146,8 @@
     ring.style.left = (r.left - 7) + 'px'; ring.style.top = (r.top - 7) + 'px';
     ring.style.width = (r.width + 14) + 'px'; ring.style.height = (r.height + 14) + 'px';
     var bw = bub.offsetWidth, bh = bub.offsetHeight, cx = r.left + r.width / 2, cy = r.top + r.height / 2, x, y, side;
-    if (vw < 720) {            // small screens: sheet at whichever end is away from the component
+    if (b.position === 'top') { side = 'top'; x = cx - bw / 2; y = r.top - gap - bh; }
+    else if (vw < 720) {            // small screens: sheet at whichever end is away from the component
       side = 'none'; x = (vw - bw) / 2; y = cy > vh / 2 ? m : vh - bh - m;
     } else if (r.right + gap + bw <= vw - m) { side = 'right'; x = r.right + gap; y = cy - bh / 2; }
     else if (r.left - gap - bw >= m) { side = 'left'; x = r.left - gap - bw; y = cy - bh / 2; }
@@ -191,6 +196,7 @@
     $('btn-objectives').setAttribute('aria-expanded', String(open));
     if (restoreFocus) $('btn-objectives').focus();
     if (open) centerObjective(false);
+    positionWindControl();
     positionBubble();
   }
   function centerObjective(animate) {
@@ -204,7 +210,7 @@
   function appendObjective(text) {
     var previous = $('objective-current');
     if (previous) {
-      previous.classList.remove('current');
+      previous.classList.remove('current', 'objective-arrival');
       previous.removeAttribute('aria-current');
       previous.removeAttribute('id');
       $('objective').removeAttribute('id');
@@ -215,6 +221,10 @@
     body.id = 'objective'; body.textContent = text;
     entry.appendChild(label); entry.appendChild(body);
     $('objectives-history').appendChild(entry);
+    if (g.stage !== 'intro' && !REDUCED) {
+      entry.classList.add('objective-arrival');
+      setTimeout(function () { entry.classList.remove('objective-arrival'); }, 2000);
+    }
     centerObjective(true);
   }
   function renderObjectives() {
@@ -313,17 +323,35 @@
   function renderTray() {
     var t = $('tray'), parts = trayParts(), html = '';
     parts.forEach(function (p, i) {
-      html += '<button type="button" class="part' + (g.selected === p ? ' sel' : '') + '" data-part="' + p + '" data-i="' + i + '" aria-pressed="' + (g.selected === p) + '">' +
+      html += '<button type="button" class="part' + (p === 'lead' ? ' new-wire' : '') + (g.selected === p ? ' sel' : '') + '" data-part="' + p + '" data-i="' + i + '" aria-pressed="' + (g.selected === p) + '">' +
         ICON[p] + '<b>' + C.parts[p].name + '</b><small>' + C.parts[p].hint + '</small></button>';
     });
-    if (g.winding) html += '<button type="button" class="windbtn" id="windbtn"><i style="width:' + (g.wind / 12 * 100) + '%"></i><span>Wind the wire — click or hold</span></button>';
     if (!html && g.stage === 'assemble') html = '<p class="hint">All parts are on the bench.</p>';
     t.innerHTML = html;
+    t.classList.toggle('attention', (g.stage === 'assemble' && !g.flags.trayStarted) || g.stage === 'wire');
+    $('wind-control').hidden = !g.winding;
+    $('wind-control').parentElement.classList.toggle('winding', g.winding);
+    positionWindControl();
+  }
+  var PART_EXPLANATIONS = { magnet: 'magnet', wire: 'winding', core: 'core', crank: 'crank', lead: 'circuit' };
+  function positionWindControl() {
+    if (!g.winding) return;
+    var left = $('a-coilL').getBoundingClientRect(), right = $('a-coilR').getBoundingClientRect();
+    var control = $('wind-control'), bench = control.parentElement.getBoundingClientRect();
+    var half = control.offsetWidth / 2;
+    control.style.left = clamp((left.left + right.right) / 2 - bench.left, half + 8, bench.width - half - 8) + 'px';
+    control.style.top = Math.max(48, Math.min(left.top, right.top) - bench.top - control.offsetHeight - 12) + 'px';
   }
   function select(part) {
+    if (cur) return;
+    g.flags.trayStarted = true;
     g.selected = g.selected === part ? null : part;
     renderTray(); markZones(g.selected);
-    if (g.selected) toast('Now choose where the ' + C.parts[g.selected].name.toLowerCase() + ' goes on the bench.');
+    if (g.selected) {
+      var id = PART_EXPLANATIONS[part];
+      if (id && !g.seen[id]) show(id, null, part);
+      else toast(C.misplace[part]);
+    }
   }
   function zoneFree(z, part) {
     var name = z.getAttribute('data-zone');
@@ -340,33 +368,34 @@
     });
   }
   function place(part, zoneEl) {
+    if (cur) return false;
     var zone = zoneEl.getAttribute('data-zone'), accept = zoneEl.getAttribute('data-accept').split(' ');
     if (accept.indexOf(part) < 0) { toast(C.misplace[part]); return false; }
     if (!zoneFree(zoneEl, part)) { toast(C.misplace.taken); return false; }
     g.selected = null; markZones(null);
-    if (part === 'magnet') { g.placed.magnet = true; crew('magnetIn'); show('magnet'); }
+    if (part === 'magnet') { g.placed.magnet = true; crew('magnetIn'); }
     else if (part === 'wire') { g.placed.wire = true; g.winding = true; crew('wireStart'); }
     else if (part === 'core') {
       g.placed.core = true; crew('coreIn');
       g.bench.core = { cap: 'Bench test · same speed, nothing connected', unit: 'V', max: S.BASE.k * REF_W,
         rows: [{ label: 'without iron', v: S.BASE.k * S.BASE.noCore * REF_W }, { label: 'with iron', v: S.BASE.k * REF_W, after: true }] };
-      show('core');
     }
-    else if (part === 'crank') { g.placed.crank = true; crew('crankIn'); show('crank'); }
+    else if (part === 'crank') { g.placed.crank = true; crew('crankIn'); }
     else if (part === 'lead') {
       g.leadAt[zone] = true; g.leads++;
       if (g.leads === 1) crew('oneWire');
-      else { crew('wired'); show('circuit', function () { openRoom(0); setStage('light'); }); }
+      else { crew('wired'); openRoom(0); setStage('light'); }
     }
     syncUI();
     if (g.winding) { var w = $('windbtn'); if (w) w.focus(); }
+    checkBuilt();
     return true;
   }
   function addWind(n) {
-    if (!g.winding) return;
+    if (!g.winding || paused()) return;
     g.wind = Math.min(12, g.wind + n); renderTurns();
     var bar = document.querySelector('#windbtn i'); if (bar) bar.style.width = (g.wind / 12 * 100) + '%';
-    if (g.wind >= 12) { g.winding = false; g.windHold = false; crew('wound'); syncUI(); show('winding'); }
+    if (g.wind >= 12) { g.winding = false; g.windHold = false; crew('wound'); syncUI(); checkBuilt(); }
   }
   function checkBuilt() {
     if (g.stage === 'assemble' && built() && !cur) { setStage('spin'); crew('built'); $('crank-btn').focus({ preventScroll: true }); }
@@ -377,8 +406,10 @@
   function bindTray() {
     var tray = $('tray'), ghost = $('ghost'), suppress = false;
     tray.addEventListener('pointerdown', function (e) {
-      var w = e.target.closest('#windbtn'); if (w) { g.windHold = true; return; }
+      if (cur) return;
       var b = e.target.closest('[data-part]'); if (!b) return;
+      var part = b.getAttribute('data-part');
+      if (!g.seen[PART_EXPLANATIONS[part]]) { select(part); return; }
       drag = { part: b.getAttribute('data-part'), x: e.clientX, y: e.clientY, moved: false, id: e.pointerId };
     });
     window.addEventListener('pointermove', function (e) {
@@ -407,7 +438,6 @@
     window.addEventListener('pointerup', end); window.addEventListener('pointercancel', end);
     tray.addEventListener('click', function (e) {
       if (suppress) return;
-      if (e.target.closest('#windbtn')) { addWind(2); return; }
       var b = e.target.closest('[data-part]'); if (b) select(b.getAttribute('data-part'));
     });
     var zones = $('zones');
@@ -416,6 +446,15 @@
       if ((e.key === 'Enter' || e.key === ' ') && g.selected) { e.preventDefault(); place(g.selected, e.target); }
     });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && g.selected && !cur) select(g.selected); });
+    var wind = $('windbtn');
+    wind.addEventListener('pointerdown', function (e) { if (!e.button && !paused()) g.windHold = true; });
+    wind.addEventListener('click', function () { addWind(2); });
+    wind.addEventListener('keydown', function (e) {
+      if ((e.key === ' ' || e.key === 'Enter') && !paused()) { e.preventDefault(); g.windHold = true; }
+    });
+    wind.addEventListener('keyup', function (e) { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); g.windHold = false; } });
+    wind.addEventListener('blur', function () { g.windHold = false; });
+    window.addEventListener('blur', function () { g.windHold = false; });
   }
 
   /* ----------------------------- controls ---------------------------- */
@@ -445,7 +484,7 @@
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape') { if (cur) closeBubble(); else if (modal.log) toggleLog(false); }
     });
-    window.addEventListener('resize', function () { positionBubble(); centerObjective(false); });
+    window.addEventListener('resize', function () { positionBubble(); centerObjective(false); positionWindControl(); });
     window.addEventListener('scroll', positionBubble, { passive: true });
 
     $('gen').addEventListener('click', function (e) {
@@ -656,6 +695,7 @@
     }
     $('supplies').textContent = g.supplies;
     $('log-count').textContent = g.order.length;
+    positionWindControl();
   }
 
   var textAcc = 0;
@@ -672,7 +712,11 @@
     var c = -Math.cos(g.vis), len = 40 * c * (g.placed.core ? 1 : S.BASE.noCore) * (g.upg.magnet ? 1.15 : 1);
     $('fieldL').setAttribute('x1', 141 - len); $('fieldL').setAttribute('x2', 141 + len);
     $('fieldR').setAttribute('x1', 399 - len); $('fieldR').setAttribute('x2', 399 + len);
-    $('field').style.opacity = Math.abs(c) < 0.08 ? 0 : 1;
+    // Reveal the field demonstration on first generation, then keep its labels
+    // visible even when the directional component passes through zero.
+    if (built() && o.E > 0.05) g.flags.fieldStarted = true;
+    hid($('field'), !g.flags.fieldStarted);
+    $('field-arrows').style.opacity = Math.abs(c) < 0.08 ? 0 : 1;
     // meter
     var V = g.placed.wire && g.wind >= 12 ? o.V : 0;
     $('needle').setAttribute('transform', 'rotate(' + (-60 + 120 * clamp(V, 0, 40) / 40).toFixed(1) + ' 620 170)');
@@ -752,7 +796,7 @@
     var dt = (now - last) / 1000; last = now;
     if (dt > 0.1) dt = 0.1;                       // never jump after time away from the tab
     if (dt < 0) dt = 0;
-    if (g.winding && g.windHold) addWind(9 * dt);
+    if (g.winding && g.windHold && !paused()) addWind(9 * dt);
     if (built() && !paused()) { acc += dt; var guard = 0; while (acc >= H && guard++ < 24 && !paused()) { tick(H); acc -= H; } if (guard >= 24) acc = 0; }
     else acc = 0;
     render(dt);

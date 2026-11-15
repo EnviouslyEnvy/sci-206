@@ -643,3 +643,67 @@ Tool: ChatGPT/Codex (OpenAI).
 
 Put the current objective at the middle of the list, and have it move back for the new objective when it arrives. Still highlight/emphasize it. Don't number the objectives. Darken the older objectives.
 
+==================== PROMPT 10 ====================
+
+Tool: ChatGPT/Codex (OpenAI).
+
+Commit that, and disable the engineering team dialogue for now (don't render the box where they should be as well.) commit that after you do that
+
+==================== PROMPT 11 ====================
+
+Tool: ChatGPT/Codex (OpenAI).
+
+Put a yellow pulsing highlighting box (non-filled) over the parts tray when you start off. Change the caption to appear when you click on the parts initially rather than after you place them, because they can give some context on where they should go. Winding the wire popup should appear above the wires rather than in the parts tray. that's a mental disconnect having the wind button there.
+
+==================== PROMPT 12 ====================
+
+Tool: ChatGPT/Codex (OpenAI).
+
+Change:
+
+Making voltage
+
+Faster spin makes greater voltage generation?
+
+Rotating the magnet faster makes the field through the coil change more quickly. As a result of the faster changing field, the induced voltage rises, assuming the same coil winding (number of coils) and magnet strength.
+
+Making voltage
+
+Still magnetic. No output.
+
+The magnet hasn't lost its magnetism. The field through the coil has simply stopped changing. A stronger stationary magnet wouldn't solve that-we need the change.
+
+This should be changed to:
+
+No field change? No output.
+
+The field through the coil has stopped changing, causing the induced voltage to calm down and return to 0.
+
+It isn't that the permanent magnet has lost its strength, but it's because the spinning had stopped allowing it to make change to the fields. Even if the magnet was stronger, it would mean nothing if it wasn't actively changing the magnetic field through the coils.
+
+Add yellow highlights to point out the wires being added to the tray. Rename them to just wire. not lead wire.
+
+Finish the connection
+
+The meter showed voltage, but the bulb needs a complete circuit. With both connections made-and the room's switch closed-current can flow through the bulb and return through the generator.
+
+Each lead wire runs from one output terminal out to the house.
+
+This is a very confusing passage. I would change it to
+
+Connect the household!
+
+and write something accordingly here about the household being a load
+
+==================== PROMPT 13 ====================
+
+Tool: ChatGPT/Codex (OpenAI).
+
+Field through coil text disappears when the field arrow disappears (ie its direction is 0). it shouldn't. It also shouldn't render before any field is induced too.
+
+==================== PROMPT 14 ====================
+
+Tool: ChatGPT/Codex (OpenAI).
+
+Make the new objective in the objectives list pulse for two seconds when it first appears.
+

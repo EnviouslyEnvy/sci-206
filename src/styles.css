@@ -31,6 +31,8 @@ body.objectives-open #app{min-width:0;min-height:calc(100vh - 24px);width:100%;m
 #objectives-history .objective-entry.current{padding:14px;background:#302b20;border:2px solid var(--amber);color:#fff4d6;box-shadow:0 0 20px #ffbe5515}
 #objectives-history .objective-entry.current .obj-tag{display:inline-block;font-size:10px;margin-bottom:10px}
 #objectives-history .objective-entry.current p{font-size:17px;font-weight:750}
+#objectives-history .objective-entry.current.objective-arrival{animation:objective-arrival 1s ease-in-out 2}
+@keyframes objective-arrival{0%,100%{border-color:var(--amber);background:#302b20;box-shadow:0 0 20px #ffbe5515}50%{border-color:#ffe6a3;background:#44371e;box-shadow:0 0 22px #ffbe5570,inset 0 0 12px #ffbe551a}}
 @media (min-width:981px) and (max-width:1280px){body.objectives-open .stage{grid-template-columns:1fr}body.objectives-open .deck{grid-template-columns:1fr}}
 @media (max-width:720px){body.objectives-open #layout{display:block;padding:0}.objectives-panel{position:relative;top:auto;height:45vh;margin:8px 8px 0;max-height:45vh}#objectives-history .objective-entry.current p{font-size:16px}body.objectives-open #app{margin:0 auto}}
 .obj-tag{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#0b1020;background:var(--amber);border-radius:999px;padding:2px 8px;font-weight:800}
@@ -184,10 +186,18 @@ input[type=range]{width:100%;height:32px;accent-color:var(--amber)}
 .legend b{color:var(--ink)}
 
 #tray{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:8px}
+#tray{position:relative}
+#tray.attention::after{content:"";position:absolute;inset:-6px;border:3px solid var(--amber);border-radius:16px;pointer-events:none;animation:tray-pulse 1.4s ease-in-out infinite}
+@keyframes tray-pulse{0%,100%{opacity:.45}50%{opacity:1}}
+#wind-control{position:absolute;z-index:3;width:min(300px,calc(100% - 24px));transform:translateX(-50%)}
+#wind-control .windbtn{width:100%}
+.bench.winding #gen{min-height:360px}
 .part{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:8px;min-height:74px;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;touch-action:none}
 .part svg{width:64px;height:30px;min-height:0;max-height:none}
 .part b{font-size:13px} .part small{font-size:11px;color:var(--mute)}
 .part:hover{border-color:var(--amber)}
+.part.new-wire{position:relative;border-color:var(--amber)}
+.part.new-wire::after{content:"";position:absolute;inset:-3px;border:2px solid var(--amber);border-radius:14px;pointer-events:none;animation:tray-pulse 1.4s ease-in-out infinite}
 .part.sel{border-color:var(--amber);background:#2a2413;box-shadow:0 0 0 2px #ffbe5555}
 .windbtn{grid-column:1/-1;background:#2a2413;border:2px solid var(--amber);border-radius:12px;padding:12px;font-weight:800;min-height:56px;position:relative;overflow:hidden;touch-action:none}
 .windbtn i{position:absolute;left:0;top:0;bottom:0;background:#ffbe5533;width:0}
@@ -232,7 +242,7 @@ input[type=range]{width:100%;height:32px;accent-color:var(--amber)}
 @keyframes ringp{50%{border-color:#fff}}
 .bubble{position:fixed;z-index:61;width:min(350px,calc(100vw - 24px));background:#fdf8ec;color:#1c1a14;border-radius:16px;padding:14px 16px 12px;box-shadow:0 14px 40px #000a}
 .bubble h3{margin:2px 0 6px;font-size:18px;line-height:1.2}
-.bubble p{margin:0;font-size:14.5px}
+.bubble p{margin:0;font-size:14.5px;white-space:pre-line}
 .b-topic{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#8a6a2a;font-weight:800}
 .b-arrow{position:absolute;width:16px;height:16px;background:#fdf8ec;transform:rotate(45deg)}
 .b-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px}
@@ -271,7 +281,7 @@ input[type=range]{width:100%;height:32px;accent-color:var(--amber)}
   .brand span{display:none}
 }
 @media (prefers-reduced-motion: reduce){
-  .rain,.hot-i.new circle,.ring,.chip::before,#gen.placing .zone.hot{animation:none!important}
+  .rain,.hot-i.new circle,.ring,.chip::before,#gen.placing .zone.hot,#tray.attention::after,.part.new-wire::after,#objectives-history .objective-entry.current.objective-arrival{animation:none!important}
   .flash.go{animation:none}
   *{transition:none!important}
 }
