@@ -33,19 +33,20 @@
     <section class="bench card" aria-label="Generator workbench">
       <div class="chip" id="status" role="status"></div>
       <div id="wind-control" hidden><button type="button" class="windbtn" id="windbtn"><i></i><span>Wind the wire - click or hold</span></button></div>
-      <svg id="gen" viewBox="0 0 700 440" role="group" aria-label="Generator, seen from above">
+      <svg id="gen" viewBox="20 38 680 398" role="group" aria-label="Generator, seen from above">
         <defs>
           <linearGradient id="g-copper" x1="0" x2="1"><stop offset="0" stop-color="#8d4519"/><stop offset=".45" stop-color="#f3a970"/><stop offset="1" stop-color="#9a4d1e"/></linearGradient>
           <linearGradient id="g-copper2" x1="0" x2="1"><stop offset="0" stop-color="#a85a24"/><stop offset=".45" stop-color="#ffc592"/><stop offset="1" stop-color="#b3642c"/></linearGradient>
           <linearGradient id="g-iron" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#b9c1cd"/><stop offset="1" stop-color="#69717f"/></linearGradient>
-          <linearGradient id="g-plate" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#2a3352"/><stop offset="1" stop-color="#1c233b"/></linearGradient>
-          <marker id="ah-drive" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 10 5 0 10z" fill="#ffbe55"/></marker>
-          <marker id="ah-drag" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 10 5 0 10z" fill="#7fe0e6"/></marker>
-          <marker id="ah-field" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0 10 5 0 10z" fill="#fff"/></marker>
+          <linearGradient id="g-plate" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#e6d3b0"/><stop offset="1" stop-color="#cbb186"/></linearGradient>
+          <marker id="ah-drive" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 10 5 0 10z" fill="#f08a00"/></marker>
+          <marker id="ah-drag" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 10 5 0 10z" fill="#0e8f9a"/></marker>
+          <marker id="ah-field" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0 10 5 0 10z" fill="#14213d"/></marker>
         </defs>
 
         <rect class="plate" x="30" y="70" width="500" height="240" rx="22"/>
         <rect class="plate" x="196" y="296" width="148" height="132" rx="22"/>
+        <path class="plank" d="M40 116H520M40 264H520M206 356H334"/>
         <circle class="sweep" cx="270" cy="190" r="64"/>
 
         <!-- stationary iron cores -->
@@ -75,8 +76,8 @@
             <line id="fieldL" class="field" x1="141" y1="190" x2="141" y2="190" marker-end="url(#ah-field)"/>
             <line id="fieldR" class="field" x1="399" y1="190" x2="399" y2="190" marker-end="url(#ah-field)"/>
           </g>
-          <text class="tiny p-wire" x="141" y="250" text-anchor="middle">field through coil</text>
-          <text class="tiny p-wire" x="399" y="250" text-anchor="middle">field through coil</text>
+          <text class="tiny onbench p-wire" x="141" y="250" text-anchor="middle">field through coil</text>
+          <text class="tiny onbench p-wire" x="399" y="250" text-anchor="middle">field through coil</text>
         </g>
 
         <!-- belt + crank -->
@@ -155,18 +156,19 @@
           <rect class="zone" data-zone="term1" data-accept="lead" x="590" y="280" width="110" height="32" rx="10" role="button" aria-label="Lower output terminal"/>
         </g>
       </svg>
-      <p class="fine">Top-down view. Rotation is drawn slower than real speed so you can follow it.</p>
+      <p class="fine">Top-down view. Spin is shown slowed down.</p>
     </section>
 
     <section class="house card" aria-label="House">
-      <svg id="house" viewBox="0 0 440 440" role="group" aria-label="House cutaway with three rooms">
+      <svg id="house" viewBox="0 12 440 428" role="group" aria-label="House cutaway with three rooms">
         <defs>
           <radialGradient id="glow0" cx="170" cy="286" r="150" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff3c4"/><stop offset=".35" stop-color="#ffcf6b"/><stop offset="1" stop-color="#b9701c"/></radialGradient>
           <radialGradient id="glow1" cx="330" cy="286" r="150" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff3c4"/><stop offset=".35" stop-color="#ffcf6b"/><stop offset="1" stop-color="#b9701c"/></radialGradient>
           <radialGradient id="glow2" cx="250" cy="166" r="170" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff3c4"/><stop offset=".35" stop-color="#ffcf6b"/><stop offset="1" stop-color="#b9701c"/></radialGradient>
         </defs>
+        <g aria-hidden="true"><ellipse cx="90" cy="38" rx="80" ry="22" fill="#232c4a"/><ellipse cx="150" cy="24" rx="60" ry="18" fill="#2a3456"/><ellipse cx="380" cy="30" rx="70" ry="20" fill="#232c4a"/><path class="bolt" d="M112 52 96 92h14l-10 34 30-46h-15l12-28z"/></g>
         <g class="rain" aria-hidden="true" id="rain"></g>
-        <rect x="0" y="404" width="440" height="36" fill="#0d1322"/>
+        <rect x="0" y="404" width="440" height="36" fill="#13241a"/><path d="M0 404H440" stroke="#2c4a34" stroke-width="3"/>
         <!-- supply bus and parallel branches -->
         <g id="bus">
           <path class="hwire" id="bus-main" d="M0 420H40V190"/>
@@ -179,9 +181,9 @@
           <g class="swg" id="swg-2"><circle cx="74" cy="190" r="3"/><circle cx="96" cy="190" r="3"/><line x1="74" y1="190" x2="96" y2="190"/></g>
         </g>
         <!-- shell -->
-        <path d="M62 152 250 40 438 152Z" fill="#232c47" stroke="#39456b" stroke-width="3" stroke-linejoin="round"/>
-        <rect x="330" y="62" width="26" height="50" fill="#232c47" stroke="#39456b" stroke-width="3"/>
-        <rect x="90" y="150" width="320" height="254" fill="#0f1526" stroke="#39456b" stroke-width="3"/>
+        <path d="M62 152 250 40 438 152Z" fill="#6b3a40" stroke="#93565c" stroke-width="4" stroke-linejoin="round"/>
+        <rect x="330" y="62" width="26" height="50" fill="#6b3a40" stroke="#93565c" stroke-width="4"/>
+        <rect x="90" y="150" width="320" height="254" fill="#0c1120" stroke="#cfc2a8" stroke-width="5"/>
 
         <g class="room" id="room-2" data-room="2">
           <rect class="rbase" x="130" y="152" width="240" height="118"/>
@@ -210,13 +212,13 @@
           <text class="rlock" x="330" y="330" text-anchor="middle">not wired yet</text>
           <rect class="rhit" x="251" y="272" width="157" height="130"/>
         </g>
-        <path d="M90 271H410M250 271V404" stroke="#39456b" stroke-width="3"/>
+        <path d="M90 271H410M250 271V404M130 152V270M370 152V270" stroke="#a79c86" stroke-width="4"/>
       </svg>
       <div class="switches" id="switches"></div>
     </section>
   </main>
 
-  <div class="crewline" id="crew" aria-live="polite" hidden><span class="who"></span><span class="say"></span></div>
+  <div class="crewline" id="crew" aria-live="polite" hidden><span class="av" aria-hidden="true"></span><span class="who"></span><span class="say"></span></div>
 
   <footer class="deck">
     <div class="panel" id="crank-box">
@@ -242,7 +244,7 @@
         <div class="split" aria-hidden="true"><i id="m-split-load"></i><i id="m-split-heat"></i></div>
         <div class="legend"><span class="k load">reaching lamps <b id="m-pload">0</b> W</span><span class="k heat">lost as heat <b id="m-pheat">0</b> W</span></div>
       </div>
-      <p class="hint" id="meters-hint">Readings appear as the machine comes together.</p>
+      <p class="hint" id="meters-hint">Readings show up once it’s built.</p>
     </div>
 
     <div class="panel" id="side">
@@ -280,12 +282,12 @@
 </div>
 
 <div id="predict" class="overlay" role="dialog" aria-modal="true" aria-labelledby="predict-title" hidden>
-  <div class="modal"><h2 id="predict-title"></h2><p id="predict-q"></p><div id="predict-opts" class="opts"></div><p class="hint">The generator is paused while you choose.</p></div>
+  <div class="modal"><h2 id="predict-title"></h2><p id="predict-q"></p><div id="predict-opts" class="opts"></div><p id="predict-fb" class="fb" role="status" aria-live="polite"></p><p class="hint">Paused while you choose.</p></div>
 </div>
 
 <aside id="log" class="drawer" role="dialog" aria-labelledby="log-title" hidden>
   <div class="drawer-head"><h2 id="log-title">Explanation log</h2><button id="log-close" class="ghost" type="button">Close</button></div>
-  <p class="hint">Everything the team has explained so far. Select one to see it again on the machine.</p>
+  <p class="hint">Tap an entry to see it again on the machine.</p>
   <div id="log-body"></div>
 </aside>
 

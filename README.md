@@ -34,18 +34,19 @@ Everything is in `src/content.js`, then run `node build.js`.
 - `team` — set this to your group members' names; it appears on the ending card.
 - `crew`, `objectives`, `prediction`, `ending.recap` — story lines and the recap.
 
-### Changes made to the supplied bubble copy
+### Bubble copy (revised 15 Nov)
 
-- **"Connect the household!"** replaces "Finish the connection" at the user's request.
-  It introduces the household lighting as the load, then explains connecting two wires
-  and closing a room switch. "Lead wire" has been renamed "Wire" in player-facing copy.
-- **"Faster spin makes greater voltage generation?"** and **"No field change? No output."**
-  were revised at the user's request. Winding count is called "number of turns".
-- **"Fewer crank turns—with a catch"** (gear ratio) — kept in the file but unused;
-  there is no gearbox in this build.
-- Other supplied bubble bodies are retained; assembly previews also append placement guidance.
-- Added (not from the supplied file): crew one-liners, objectives, the prediction
-  question, the ending recap, and the small bench-test figures inside some bubbles.
+The group's original bubble copy was rewritten in plainer, shorter wording after
+group feedback that it was hard to follow. Each bubble keeps the same trigger,
+anchor and physics point; only the wording changed. The original wording is in
+this repo's first commit and in `ai-prompts.txt`.
+
+- "Current needs a loop" now says the switch completes the loop, because in the
+  game the room switch is a separate step from attaching the two leads.
+- The gear-ratio bubble is kept in the file but unused; there is no gearbox.
+- Crew lines, objectives, hints and upgrade text were shortened the same day.
+- The prediction popup stays open until the correct answer is chosen. A wrong
+  choice is crossed out with a one-line reason.
 
 ## Simulation assumptions and simplifications
 
@@ -85,6 +86,7 @@ Played end to end in headless Chrome (Playwright) at 1280×800, plus resize chec
 - Wrong placement shows a helpful message and does not penalise.
 - Stopped rotor reads 0.0 V. Open circuit read about 13 V while the lamp stayed off.
 - Closing the circuit lit the first room (94 % at half effort).
+- A wrong prediction keeps the popup open and the kitchen switch off.
 - Adding a second room at the same effort: rotor 319 → 285 rpm, rooms 94 % → 55 %.
 - Switching that room off again restored 91 %; full effort held two rooms at 88 %.
 - Three rooms on the base machine at full effort: 61 % (not enough).
