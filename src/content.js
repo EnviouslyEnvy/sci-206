@@ -94,7 +94,7 @@ window.CONTENT = {
       trigger: 'The opposing-rotation arrow appears while two rooms draw current',
       note: 'Revised to state that load current produces an opposing torque that grows with the current, so a second room requires more crank force at the same speed.',
       title: 'Where does that extra drag come from?',
-      body: 'Current in the coils produces a magnetic field of its own. By Lenz’s law, that field opposes the change in magnetic field through the coils caused by the spinning magnet. The coils therefore apply a torque to the magnet opposite its direction of rotation.\n\nThe size of that torque increases with the current. A second room draws more current, so the opposing torque increases. Holding the same rotation speed then takes more force at the crank. The extra mechanical work is the electrical energy delivered to the lights.' },
+      body: 'Current in the coils produces a magnetic field of its own. By Lenz’s law, that field opposes the change in magnetic field through the coils caused by the spinning magnet. The coils therefore apply a torque to the magnet opposite its direction of rotation.\n\nThe size of that torque increases with the current. A second room draws more current, so the opposing torque increases. Holding the same rotation speed then takes more force at the crank. The extra mechanical work is the electrical energy that ultimately powers the added room.' },
     { id: 'balance', topic: 'Load and Lenz’s law', anchor: 'effort-box', source: 'supplied',
       trigger: 'Offered once the drag has been explained',
       title: 'Balance the demand',
