@@ -19,7 +19,8 @@ button{cursor:pointer}
 :focus-visible{outline:3px solid var(--teal);outline-offset:2px;border-radius:6px}
 [hidden]{display:none!important}
 
-#app{min-height:100vh;display:grid;grid-template-rows:auto 1fr auto auto;gap:10px;padding:10px 14px 14px;max-width:1500px;margin:0 auto}
+#app{min-height:100vh;display:grid;grid-template-rows:auto 1fr auto;gap:10px;padding:10px 14px 14px;max-width:1500px;margin:0 auto}
+#app.has-crew{grid-template-rows:auto 1fr auto auto}
 .top{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
 .brand{display:flex;align-items:center;gap:8px;font-weight:800;letter-spacing:.2px;color:var(--amber);font-size:17px;white-space:nowrap}
 .top-right{margin-left:auto}
@@ -489,7 +490,7 @@ input[type=range]{width:100%;height:32px;accent-color:var(--amber)}
     </section>
   </main>
 
-  <div class="crewline" id="crew" aria-live="polite"><span class="who"></span><span class="say"></span></div>
+  <div class="crewline" id="crew" aria-live="polite" hidden><span class="who"></span><span class="say"></span></div>
 
   <footer class="deck">
     <div class="panel" id="crank-box">
@@ -711,6 +712,7 @@ window.CONTENT = {
     'The power is out. We have the parts. Let’s get the lights back on.'
   ],
 
+  crewDialogue: false, // Re-enable the team dialogue and its box by setting this to true.
   crewNames: ['Imani', 'Tobias', 'Wren'],
 
   bubbles: [
@@ -981,6 +983,7 @@ window.CONTENT = {
     clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.hidden = true; }, 3600);
   }
   function crew(key) {
+    if (!C.crewDialogue) return;
     var line = C.crew[key]; if (!line) return;
     var c = $('crew');
     c.querySelector('.who').textContent = line[0] + ':';
@@ -1525,6 +1528,8 @@ window.CONTENT = {
   // Everything that changes on events (not every frame).
   function syncUI() {
     var gen = $('gen'), b = built(), st = g.stage;
+    $('crew').hidden = !C.crewDialogue;
+    $('app').classList.toggle('has-crew', !!C.crewDialogue);
     $('app').dataset.stage = st;
     renderObjectives();
     ['magnet', 'wire', 'core', 'crank'].forEach(function (p) { gen.classList.toggle('has-' + p, g.placed[p]); });

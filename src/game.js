@@ -59,6 +59,7 @@
     clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.hidden = true; }, 3600);
   }
   function crew(key) {
+    if (!C.crewDialogue) return;
     var line = C.crew[key]; if (!line) return;
     var c = $('crew');
     c.querySelector('.who').textContent = line[0] + ':';
@@ -603,6 +604,8 @@
   // Everything that changes on events (not every frame).
   function syncUI() {
     var gen = $('gen'), b = built(), st = g.stage;
+    $('crew').hidden = !C.crewDialogue;
+    $('app').classList.toggle('has-crew', !!C.crewDialogue);
     $('app').dataset.stage = st;
     renderObjectives();
     ['magnet', 'wire', 'core', 'crank'].forEach(function (p) { gen.classList.toggle('has-' + p, g.placed[p]); });

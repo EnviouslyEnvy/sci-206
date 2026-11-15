@@ -28,6 +28,7 @@ window.CONTENT = {
     'The power is out. We have the parts. Let’s get the lights back on.'
   ],
 
+  crewDialogue: false, // Re-enable the team dialogue and its box by setting this to true.
   crewNames: ['Imani', 'Tobias', 'Wren'],
 
   bubbles: [

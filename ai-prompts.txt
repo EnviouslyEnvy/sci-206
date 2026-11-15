@@ -637,3 +637,9 @@ Make this a commit. and add the prompts to the log.
 
 Then Remove the ongoing rain sound and only keep the generator rotation sound.
 
+==================== PROMPT 9 ====================
+
+Tool: ChatGPT/Codex (OpenAI).
+
+Put the current objective at the middle of the list, and have it move back for the new objective when it arrives. Still highlight/emphasize it. Don't number the objectives. Darken the older objectives.
+

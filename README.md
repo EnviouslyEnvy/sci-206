@@ -100,3 +100,8 @@ Not covered by automated checks: real touch devices, screen readers, and audio
 
 Only the generator rotation hum plays, with pitch and volume following rotor speed.
 It is silent when the rotor stops or the game is paused. The Sound button mutes it.
+
+## Team dialogue
+
+Engineering-team dialogue is temporarily disabled, including its box and layout row.
+To restore it, set `crewDialogue: true` in `src/content.js` and run `node build.js`.
