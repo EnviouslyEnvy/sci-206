@@ -95,3 +95,8 @@ Played end to end in headless Chrome (Playwright) at 1280×800, plus resize chec
 
 Not covered by automated checks: real touch devices, screen readers, and audio
 (sound cannot be heard in a headless run).
+
+## Audio
+
+Only the generator rotation hum plays, with pitch and volume following rotor speed.
+It is silent when the rotor stops or the game is paused. The Sound button mutes it.

@@ -629,3 +629,11 @@ Tool: ChatGPT/Codex (OpenAI).
 
 please center the entire ui still
 
+==================== PROMPT 8 ====================
+
+Tool: ChatGPT/Codex (OpenAI).
+
+Make this a commit. and add the prompts to the log.
+
+Then Remove the ongoing rain sound and only keep the generator rotation sound.
+

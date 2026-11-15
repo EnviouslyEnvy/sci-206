@@ -69,52 +69,24 @@
     g.supplies += n;
     var b = $('supplies-box'); b.hidden = false; $('supplies').textContent = g.supplies;
     b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump');
-    Audio.chime(660, 880);
     renderShop();
   }
 
   /* ------------------------------ audio ------------------------------ */
-  // Everything is synthesised; there are no audio files.
+  // Only the speed-dependent generator hum is synthesised; there are no audio files.
   var Audio = (function () {
     var ctx = null, master = null, hum = null, humGain = null, muted = false;
-    function noise(sec) {
-      var b = ctx.createBuffer(1, ctx.sampleRate * sec, ctx.sampleRate), d = b.getChannelData(0);
-      for (var i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-      return b;
-    }
     function init() {
       if (ctx) { if (ctx.state === 'suspended') ctx.resume(); return; }
       try {
         var AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
         ctx = new AC(); master = ctx.createGain(); master.gain.value = muted ? 0 : 1; master.connect(ctx.destination);
-        var rain = ctx.createBufferSource(); rain.buffer = noise(2); rain.loop = true;
-        var f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1800; f.Q.value = 0.4;
-        var rg = ctx.createGain(); rg.gain.value = 0.035; rain.connect(f); f.connect(rg); rg.connect(master); rain.start();
         hum = ctx.createOscillator(); hum.type = 'triangle'; hum.frequency.value = 40;
         humGain = ctx.createGain(); humGain.gain.value = 0; hum.connect(humGain); humGain.connect(master); hum.start();
       } catch (e) { ctx = null; }
     }
-    function burst(dur, freq, gain) {
-      if (!ctx) return;
-      var s = ctx.createBufferSource(); s.buffer = noise(dur);
-      var f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = freq;
-      var gn = ctx.createGain(); gn.gain.setValueAtTime(gain, ctx.currentTime);
-      gn.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
-      s.connect(f); f.connect(gn); gn.connect(master); s.start();
-    }
-    function tone(freq, t0, dur, gain) {
-      var o = ctx.createOscillator(), gn = ctx.createGain(); o.type = 'sine'; o.frequency.value = freq;
-      gn.gain.setValueAtTime(0.0001, ctx.currentTime + t0);
-      gn.gain.exponentialRampToValueAtTime(gain, ctx.currentTime + t0 + 0.02);
-      gn.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + t0 + dur);
-      o.connect(gn); gn.connect(master); o.start(ctx.currentTime + t0); o.stop(ctx.currentTime + t0 + dur + 0.05);
-    }
     return {
       init: init,
-      tick: function () { burst(0.05, 2400, 0.12); },
-      thunder: function () { burst(1.8, 180, 0.5); },
-      chime: function (a, b) { if (!ctx) return; tone(a, 0, 0.25, 0.08); tone(b, 0.12, 0.35, 0.08); },
-      fanfare: function () { if (!ctx) return; [523, 659, 784, 1047].forEach(function (f, i) { tone(f, i * 0.14, 0.5, 0.09); }); },
       setHum: function (omega) {
         if (!ctx) return;
         hum.frequency.value = 36 + omega * 2.2;
@@ -217,29 +189,46 @@
     document.body.classList.toggle('objectives-open', open);
     $('btn-objectives').setAttribute('aria-expanded', String(open));
     if (restoreFocus) $('btn-objectives').focus();
+    if (open) centerObjective(false);
     positionBubble();
+  }
+  function centerObjective(animate) {
+    if ($('objectives-panel').hidden) return;
+    var scroll = $('objective-scroll'), current = $('objective-current');
+    if (!current || !scroll.clientHeight) return;
+    var space = Math.max(0, (scroll.clientHeight - current.offsetHeight) / 2);
+    scroll.style.paddingTop = scroll.style.paddingBottom = space + 'px';
+    scroll.scrollTo({ top: Math.max(0, current.offsetTop - space), behavior: animate && !REDUCED ? 'smooth' : 'instant' });
+  }
+  function appendObjective(text) {
+    var previous = $('objective-current');
+    if (previous) {
+      previous.classList.remove('current');
+      previous.removeAttribute('aria-current');
+      previous.removeAttribute('id');
+      $('objective').removeAttribute('id');
+    }
+    var entry = document.createElement('li'), label = document.createElement('span'), body = document.createElement('p');
+    entry.id = 'objective-current'; entry.className = 'objective-entry current'; entry.setAttribute('aria-current', 'step');
+    label.className = 'obj-tag'; label.textContent = 'Current objective';
+    body.id = 'objective'; body.textContent = text;
+    entry.appendChild(label); entry.appendChild(body);
+    $('objectives-history').appendChild(entry);
+    centerObjective(true);
   }
   function renderObjectives() {
     var key = g.stage === 'assemble' && g.winding ? 'winding' : g.stage;
     var history = g.objectiveHistory, previous = history[history.length - 1];
     if (key === 'intro') {
-      $('objective').textContent = 'Start building to receive your first objective.';
       $('objectives-history').innerHTML = '';
-      $('objectives-empty').hidden = false;
+      appendObjective('Start building to receive your first objective.');
       return;
     }
     if (previous && previous.key === key) return;
-    if (previous) {
-      var entry = document.createElement('li');
-      entry.textContent = previous.text;
-      $('objectives-history').appendChild(entry);
-    }
+    if (!previous) $('objectives-history').innerHTML = '';
     var text = C.objectives[key];
     history.push({ key: key, text: text });
-    $('objective').textContent = text;
-    $('objectives-empty').hidden = history.length > 1;
-    var scroll = $('objectives-history').parentElement;
-    scroll.scrollTop = scroll.scrollHeight;
+    appendObjective(text);
   }
   function openRoom(i) { g.roomOpen[i] = true; syncUI(); }
 
@@ -292,7 +281,7 @@
     var o = g.out;
     g.ended = true;
     g.endStats = { pin: Math.round(o.pIn), pload: Math.round(o.pLoad) };
-    setStage('done'); crew('done'); Audio.fanfare();
+    setStage('done'); crew('done');
     var R = C.ending.recap, items = [R.built];
     items.push(fmt(R.open, { v: g.peakOpenV.toFixed(0) }));
     items.push(R.stopped, R.load);
@@ -353,7 +342,7 @@
     var zone = zoneEl.getAttribute('data-zone'), accept = zoneEl.getAttribute('data-accept').split(' ');
     if (accept.indexOf(part) < 0) { toast(C.misplace[part]); return false; }
     if (!zoneFree(zoneEl, part)) { toast(C.misplace.taken); return false; }
-    g.selected = null; markZones(null); Audio.tick();
+    g.selected = null; markZones(null);
     if (part === 'magnet') { g.placed.magnet = true; crew('magnetIn'); show('magnet'); }
     else if (part === 'wire') { g.placed.wire = true; g.winding = true; crew('wireStart'); }
     else if (part === 'core') {
@@ -434,7 +423,7 @@
     if (!built() || g.windDrive || paused()) return;
     Audio.init();
     g.holding = true; g.effort = Math.min(cap(), g.effort + 0.15);
-    $('crank-btn').classList.add('down'); Audio.tick();
+    $('crank-btn').classList.add('down');
   }
   function pressEnd() { g.holding = false; $('crank-btn').classList.remove('down'); }
   function windEffort(t) { return 0.84 + 0.11 * Math.sin(t * 0.55) + 0.05 * Math.sin(t * 1.9 + 1); }
@@ -455,7 +444,7 @@
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape') { if (cur) closeBubble(); else if (modal.log) toggleLog(false); }
     });
-    window.addEventListener('resize', positionBubble);
+    window.addEventListener('resize', function () { positionBubble(); centerObjective(false); });
     window.addEventListener('scroll', positionBubble, { passive: true });
 
     $('gen').addEventListener('click', function (e) {
@@ -499,7 +488,7 @@
     if (!g.roomOpen[i]) { toast('That room isn’t wired in yet.'); return; }
     Audio.init();
     if (!g.rooms[i] && i === 1 && g.prediction === null) { askPrediction(); return; }
-    g.rooms[i] = !g.rooms[i]; Audio.tick();
+    g.rooms[i] = !g.rooms[i];
     if (!g.rooms[i] && g.seen.heavier && !g.flags.shed && g.out && g.out.I > 0.05) { g.flags.shed = true; award(1); crew('shed'); }
     syncUI();
   }
@@ -550,7 +539,7 @@
         note: id === 'turns' ? 'The longer wire also has about a third more resistance to warm up.' : '' };
       show(key);
     }
-    crew('upgraded'); Audio.tick(); syncUI();
+    crew('upgraded'); syncUI();
   }
   function renderShop() {
     var s = $('shop'); if (s.hidden) return;
@@ -776,7 +765,7 @@
     introTimers.forEach(clearTimeout); introTimers = [];
     if (REDUCED) { Array.prototype.forEach.call(ps, function (p) { p.classList.add('in'); }); start.hidden = false; start.focus(); return; }
     start.hidden = true;
-    var fl = $('flash'); fl.classList.remove('go'); void fl.offsetWidth; fl.classList.add('go'); Audio.thunder();
+    var fl = $('flash'); fl.classList.remove('go'); void fl.offsetWidth; fl.classList.add('go');
     Array.prototype.forEach.call(ps, function (p, i) { introTimers.push(setTimeout(function () { p.classList.add('in'); }, 700 + i * 1700)); });
     introTimers.push(setTimeout(function () { start.hidden = false; }, 700 + ps.length * 1700 - 600));
     $('intro-skip').focus();
