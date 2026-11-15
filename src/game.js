@@ -23,7 +23,7 @@
       stage: 'intro',
       placed: { magnet: false, wire: false, core: false, crank: false },
       leads: 0, leadAt: {}, wind: 0, winding: false, windHold: false,
-      seen: {}, order: [], supplies: 0,
+      seen: {}, order: [], supplies: 0, objectiveHistory: [],
       upg: { turns: false, magnet: false, loss: false }, windDrive: false,
       rooms: [false, false, false], roomOpen: [false, false, false], disp: [0, 0, 0],
       effort: 0, holding: false, latch: false, level: 0.5,
@@ -212,6 +212,35 @@
   /* --------------------------- progression --------------------------- */
   // The whole tutorial order is here. Called once per simulation step.
   function setStage(s) { g.stage = s; g.timers = {}; syncUI(); }
+  function toggleObjectives(open, restoreFocus) {
+    $('objectives-panel').hidden = !open;
+    document.body.classList.toggle('objectives-open', open);
+    $('btn-objectives').setAttribute('aria-expanded', String(open));
+    if (restoreFocus) $('btn-objectives').focus();
+    positionBubble();
+  }
+  function renderObjectives() {
+    var key = g.stage === 'assemble' && g.winding ? 'winding' : g.stage;
+    var history = g.objectiveHistory, previous = history[history.length - 1];
+    if (key === 'intro') {
+      $('objective').textContent = 'Start building to receive your first objective.';
+      $('objectives-history').innerHTML = '';
+      $('objectives-empty').hidden = false;
+      return;
+    }
+    if (previous && previous.key === key) return;
+    if (previous) {
+      var entry = document.createElement('li');
+      entry.textContent = previous.text;
+      $('objectives-history').appendChild(entry);
+    }
+    var text = C.objectives[key];
+    history.push({ key: key, text: text });
+    $('objective').textContent = text;
+    $('objectives-empty').hidden = history.length > 1;
+    var scroll = $('objectives-history').parentElement;
+    scroll.scrollTop = scroll.scrollHeight;
+  }
   function openRoom(i) { g.roomOpen[i] = true; syncUI(); }
 
   function progress(dt) {
@@ -442,6 +471,8 @@
       if (i && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); inspect(i.getAttribute('data-inspect')); }
     });
 
+    $('btn-objectives').addEventListener('click', function () { toggleObjectives($('objectives-panel').hidden, false); });
+    $('objectives-close').addEventListener('click', function () { toggleObjectives(false, true); });
     $('btn-log').addEventListener('click', function () { toggleLog(!modal.log); });
     $('log-close').addEventListener('click', function () { toggleLog(false); });
     $('btn-mute').addEventListener('click', function (e) {
@@ -584,7 +615,7 @@
   function syncUI() {
     var gen = $('gen'), b = built(), st = g.stage;
     $('app').dataset.stage = st;
-    $('objective').textContent = st === 'intro' ? '' : (st === 'assemble' && g.winding ? C.objectives.winding : C.objectives[st]);
+    renderObjectives();
     ['magnet', 'wire', 'core', 'crank'].forEach(function (p) { gen.classList.toggle('has-' + p, g.placed[p]); });
     renderTurns(); renderTray();
     // visible effects of upgrades
@@ -762,7 +793,7 @@
     ['bubble', 'ring', 'predict', 'ending', 'log', 'toast', 'supplies-box'].forEach(function (id) { $(id).hidden = true; });
     $('latch').checked = false; $('effort').value = 50; $('effort-out').textContent = '50%';
     $('crew').querySelector('.who').textContent = ''; $('crew').querySelector('.say').textContent = '';
-    markZones(null); syncUI(); startIntro();
+    toggleObjectives(true, false); markZones(null); syncUI(); startIntro();
   }
 
   /* ------------------------------- boot ------------------------------ */

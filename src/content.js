@@ -120,7 +120,7 @@ window.CONTENT = {
       body: 'This gear setting spins the rotor farther with each crank revolution. Under load, the crank also becomes harder to turn. You’re trading turning force for speed.' }
   ],
 
-  // Objective line shown at the top, by stage.
+  // Current objective and left-side objective history, by stage.
   objectives: {
     assemble: 'Build the generator: move each part from the tray onto the workbench.',
     winding:  'Wind the wire onto the coil forms.',

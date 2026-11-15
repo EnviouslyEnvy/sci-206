@@ -599,3 +599,33 @@ Attachment: screenshot of the bedroom showing the bed missing its right-hand leg
 
 The bed is missing a leg. Make sure to add ai prompts to ai-prompts.txt. Codebase is in C:\Users\evanc\OneDrive\4A\SCI 206\sci-206
 
+==================== PROMPT 4 ====================
+
+Tool: ChatGPT/Codex (OpenAI).
+
+Commit this
+
+==================== PROMPT 5 ====================
+
+Tool: ChatGPT/Codex (OpenAI).
+
+When i visit file:///C:/Users/evanc/OneDrive/4A/SCI%20206/sci-206/dist/index.html, i can't turn the crank
+
+Follow-up diagnostic answers:
+
+- Button reacts, no rotation.
+
+- Neither holding the crank nor enabling Keep cranking works after dismissing explanations.
+
+==================== PROMPT 6 ====================
+
+Tool: ChatGPT/Codex (OpenAI).
+
+The objectives are not easy to see. Can you put them on the left instead, keeping a scrollable log like with the explanation log? Keep it enabled by default.
+
+==================== PROMPT 7 ====================
+
+Tool: ChatGPT/Codex (OpenAI).
+
+please center the entire ui still
+

@@ -22,7 +22,23 @@ button{cursor:pointer}
 #app{min-height:100vh;display:grid;grid-template-rows:auto 1fr auto auto;gap:10px;padding:10px 14px 14px;max-width:1500px;margin:0 auto}
 .top{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
 .brand{display:flex;align-items:center;gap:8px;font-weight:800;letter-spacing:.2px;color:var(--amber);font-size:17px;white-space:nowrap}
-.objective{flex:1 1 320px;min-width:240px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:7px 14px;display:flex;gap:10px;align-items:center;font-weight:600}
+.top-right{margin-left:auto}
+#layout{max-width:1500px;margin:0 auto}
+body.objectives-open #layout{display:grid;grid-template-columns:268px minmax(0,1fr);gap:12px;max-width:1780px;padding:12px}
+body.objectives-open #app{min-width:0;min-height:calc(100vh - 24px);width:100%;margin:0}
+.objectives-panel{position:sticky;align-self:start;top:12px;height:calc(100vh - 24px);min-height:0;z-index:20;display:flex;flex-direction:column;padding:16px;background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:0 10px 30px #0004}
+.objectives-panel h2{margin:0;font-size:21px}
+.objectives-panel .ghost{padding:7px 10px;min-height:40px}
+.objective-current{margin-top:18px;padding:14px;background:#302b20;border:2px solid var(--amber);border-radius:12px}
+.objective-current .obj-tag{display:inline-block;font-size:10px}
+.objective-current p{margin:12px 0 0;font-size:17px;line-height:1.5;font-weight:750;color:#fff4d6;overflow-wrap:anywhere}
+.objectives-panel h3{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--mute);margin:20px 0 10px}
+.objective-history{min-height:0;flex:1;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
+#objectives-history{margin:0;padding-left:25px}
+#objectives-history li{margin-bottom:10px;padding:10px 9px;background:var(--panel2);border:1px solid var(--line);border-radius:9px;line-height:1.5;color:#d7def0}
+#objectives-history li::marker{color:var(--amber);font-weight:800}
+@media (min-width:981px) and (max-width:1280px){body.objectives-open .stage{grid-template-columns:1fr}body.objectives-open .deck{grid-template-columns:1fr}}
+@media (max-width:720px){body.objectives-open #layout{display:block;padding:0}.objectives-panel{position:relative;top:auto;height:auto;margin:8px 8px 0;max-height:45vh}.objective-current{margin-top:10px;padding:10px}.objective-current p{font-size:16px;margin-top:8px}.objectives-panel h3{margin-top:12px}body.objectives-open #app{margin:0 auto}}
 .obj-tag{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#0b1020;background:var(--amber);border-radius:999px;padding:2px 8px;font-weight:800}
 .top-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .tbtn{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px;min-height:40px}
@@ -268,14 +284,24 @@ input[type=range]{width:100%;height:32px;accent-color:var(--amber)}
 
 </style>
 </head>
-<body>
+<body class="objectives-open">
+<div id="layout">
+<aside id="objectives-panel" class="objectives-panel" aria-labelledby="objectives-title">
+  <div class="drawer-head"><h2 id="objectives-title">Objectives</h2><button id="objectives-close" class="ghost" type="button">Hide</button></div>
+  <div class="objective-current"><span class="obj-tag">Current objective</span><p id="objective" aria-live="polite">Start building to receive your first objective.</p></div>
+  <h3 id="objective-history-title">Earlier objectives</h3>
+  <div class="objective-history" tabindex="0" role="region" aria-labelledby="objective-history-title">
+    <p id="objectives-empty" class="hint">Your previous objectives will appear here.</p>
+    <ol id="objectives-history"></ol>
+  </div>
+</aside>
 <div id="app" data-stage="intro">
   <header class="top">
     <div class="brand"><svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M11 1 3 12h5l-1 7 8-11h-5z" fill="currentColor"/></svg><span>Lights Back On</span></div>
-    <div class="objective"><span class="obj-tag">Now</span><span id="objective" aria-live="polite"></span></div>
     <div class="top-right">
       <div class="pips" id="pips" role="img" aria-label="Rooms lit: 0 of 3"><i></i><i></i><i></i><span>rooms lit</span></div>
       <div class="supplies" id="supplies-box" hidden title="Supplies are a game currency earned by discoveries. They are not stored electricity.">Supplies <b id="supplies">0</b></div>
+      <button class="tbtn" id="btn-objectives" type="button" aria-controls="objectives-panel" aria-expanded="true">Objectives</button>
       <button class="tbtn" id="btn-log" type="button">Explanations <span id="log-count" class="count">0</span></button>
       <button class="tbtn" id="btn-mute" type="button" aria-pressed="false">Sound: on</button>
       <button class="tbtn" id="btn-restart" type="button">Restart</button>
@@ -502,6 +528,7 @@ input[type=range]{width:100%;height:32px;accent-color:var(--amber)}
       <div id="notes" hidden></div>
     </div>
   </footer>
+</div>
 </div>
 
 <!-- overlays -->
@@ -779,7 +806,7 @@ window.CONTENT = {
       body: 'This gear setting spins the rotor farther with each crank revolution. Under load, the crank also becomes harder to turn. You’re trading turning force for speed.' }
   ],
 
-  // Objective line shown at the top, by stage.
+  // Current objective and left-side objective history, by stage.
   objectives: {
     assemble: 'Build the generator: move each part from the tray onto the workbench.',
     winding:  'Wind the wire onto the coil forms.',
@@ -921,7 +948,7 @@ window.CONTENT = {
       stage: 'intro',
       placed: { magnet: false, wire: false, core: false, crank: false },
       leads: 0, leadAt: {}, wind: 0, winding: false, windHold: false,
-      seen: {}, order: [], supplies: 0,
+      seen: {}, order: [], supplies: 0, objectiveHistory: [],
       upg: { turns: false, magnet: false, loss: false }, windDrive: false,
       rooms: [false, false, false], roomOpen: [false, false, false], disp: [0, 0, 0],
       effort: 0, holding: false, latch: false, level: 0.5,
@@ -1110,6 +1137,35 @@ window.CONTENT = {
   /* --------------------------- progression --------------------------- */
   // The whole tutorial order is here. Called once per simulation step.
   function setStage(s) { g.stage = s; g.timers = {}; syncUI(); }
+  function toggleObjectives(open, restoreFocus) {
+    $('objectives-panel').hidden = !open;
+    document.body.classList.toggle('objectives-open', open);
+    $('btn-objectives').setAttribute('aria-expanded', String(open));
+    if (restoreFocus) $('btn-objectives').focus();
+    positionBubble();
+  }
+  function renderObjectives() {
+    var key = g.stage === 'assemble' && g.winding ? 'winding' : g.stage;
+    var history = g.objectiveHistory, previous = history[history.length - 1];
+    if (key === 'intro') {
+      $('objective').textContent = 'Start building to receive your first objective.';
+      $('objectives-history').innerHTML = '';
+      $('objectives-empty').hidden = false;
+      return;
+    }
+    if (previous && previous.key === key) return;
+    if (previous) {
+      var entry = document.createElement('li');
+      entry.textContent = previous.text;
+      $('objectives-history').appendChild(entry);
+    }
+    var text = C.objectives[key];
+    history.push({ key: key, text: text });
+    $('objective').textContent = text;
+    $('objectives-empty').hidden = history.length > 1;
+    var scroll = $('objectives-history').parentElement;
+    scroll.scrollTop = scroll.scrollHeight;
+  }
   function openRoom(i) { g.roomOpen[i] = true; syncUI(); }
 
   function progress(dt) {
@@ -1340,6 +1396,8 @@ window.CONTENT = {
       if (i && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); inspect(i.getAttribute('data-inspect')); }
     });
 
+    $('btn-objectives').addEventListener('click', function () { toggleObjectives($('objectives-panel').hidden, false); });
+    $('objectives-close').addEventListener('click', function () { toggleObjectives(false, true); });
     $('btn-log').addEventListener('click', function () { toggleLog(!modal.log); });
     $('log-close').addEventListener('click', function () { toggleLog(false); });
     $('btn-mute').addEventListener('click', function (e) {
@@ -1482,7 +1540,7 @@ window.CONTENT = {
   function syncUI() {
     var gen = $('gen'), b = built(), st = g.stage;
     $('app').dataset.stage = st;
-    $('objective').textContent = st === 'intro' ? '' : (st === 'assemble' && g.winding ? C.objectives.winding : C.objectives[st]);
+    renderObjectives();
     ['magnet', 'wire', 'core', 'crank'].forEach(function (p) { gen.classList.toggle('has-' + p, g.placed[p]); });
     renderTurns(); renderTray();
     // visible effects of upgrades
@@ -1660,7 +1718,7 @@ window.CONTENT = {
     ['bubble', 'ring', 'predict', 'ending', 'log', 'toast', 'supplies-box'].forEach(function (id) { $(id).hidden = true; });
     $('latch').checked = false; $('effort').value = 50; $('effort-out').textContent = '50%';
     $('crew').querySelector('.who').textContent = ''; $('crew').querySelector('.say').textContent = '';
-    markZones(null); syncUI(); startIntro();
+    toggleObjectives(true, false); markZones(null); syncUI(); startIntro();
   }
 
   /* ------------------------------- boot ------------------------------ */
