@@ -167,9 +167,49 @@
     }
   }
   function figure(b) {
+    if (b.figure === 'magnetic-field') {
+      // Nested arches attach across the pole regions, rather than at two points.
+      // More distant field lines extend beyond the edges of this schematic.
+      var paths = [
+        [90,90, 100,-10, 220,-10, 230,90],
+        [112,90, 120,12, 200,12, 208,90],
+        [136,90, 140,40, 180,40, 184,90],
+        [90,120, 100,220, 220,220, 230,120],
+        [112,120, 120,198, 200,198, 208,120],
+        [136,120, 140,170, 180,170, 184,120],
+        [80,94, 46,94, 24,63, 24,26],
+        [80,100, 48,100, 30,87, 12,65],
+        [80,116, 46,116, 24,147, 24,184],
+        [80,110, 48,110, 30,123, 12,145],
+        [296,26, 296,63, 274,94, 240,94],
+        [308,65, 290,87, 272,100, 240,100],
+        [296,184, 296,147, 274,116, 240,116],
+        [308,145, 290,123, 272,110, 240,110],
+        [80,105, 56,105, 32,105, 8,105],
+        [312,105, 288,105, 264,105, 240,105]
+      ];
+      var lines = paths.map(function (p, i) {
+        var path = 'M' + p[0] + ' ' + p[1] + ' C' + p.slice(2).join(' ');
+        var x = (p[0] + 3*p[2] + 3*p[4] + p[6]) / 8;
+        var y = (p[1] + 3*p[3] + 3*p[5] + p[7]) / 8;
+        var angle = Math.atan2(-p[1]-p[3]+p[5]+p[7], -p[0]-p[2]+p[4]+p[6]) * 180 / Math.PI;
+        var arrow = '<path class="field-direction" d="M-5 -4 L2 0 L-5 4"';
+        if (REDUCED) arrow += ' transform="translate(' + x + ' ' + y + ') rotate(' + angle + ')"/>';
+        else arrow += '><animateMotion path="' + path + '" dur="' + (i < 6 ? 5 : 3) +
+          's" begin="-' + (i * 0.43) + 's" rotate="auto" calcMode="paced" repeatCount="indefinite"/></path>';
+        return '<path class="field-line" d="' + path + '"/>' + arrow;
+      }).join('');
+      return '<div class="fig magnetic-field"><div class="cap">Magnetic field · top view</div>' +
+        '<svg viewBox="0 0 320 210" role="img" aria-label="Top view of a bar magnet. Magnetic field lines curve out from the north pole and into the south pole.">' +
+        lines + '<rect x="80" y="90" width="80" height="30" fill="#c6433c"/>' +
+        '<rect x="160" y="90" width="80" height="30" fill="#2868b7"/>' +
+        '<rect x="80" y="90" width="160" height="30" rx="4" fill="none" stroke="#263641" stroke-width="2"/>' +
+        '<g fill="white" font-size="17" font-weight="800" text-anchor="middle"><text x="96" y="111">N</text><text x="224" y="111">S</text></g></svg>' +
+        '<div>Outside the magnet, the field points from N to S. The field exists even when the magnet is still. Arrows show direction, not particles flowing or the field changing.</div></div>';
+    }
     if (b.figure === 'coating') {
       return '<div class="fig"><div class="cap">Close-up of neighbouring turns</div>' +
-        '<svg viewBox="0 0 240 70" aria-hidden="true"><g>' +
+          '<svg viewBox="0 0 270 70" aria-hidden="true"><g>' +
         [40, 96, 152].map(function (x) { return '<circle cx="' + x + '" cy="34" r="27" fill="#4d7a9c"/><circle cx="' + x + '" cy="34" r="21" fill="#d9824a"/>'; }).join('') +
         '</g><text x="206" y="24" font-size="11" font-weight="700" fill="#4d7a9c">coating</text>' +
         '<text x="206" y="46" font-size="11" font-weight="700" fill="#a85a24">copper</text></svg></div>';

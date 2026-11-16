@@ -727,3 +727,24 @@ Tool: ChatGPT/Codex (OpenAI).
 
 When you click on the bar magnet after it's placed, can you create a small visual of the magnetic field it produces from a top down view with animated little arrows?
 
+==================== PROMPT 18 ====================
+
+Tool: ChatGPT/Codex (OpenAI).
+
+that's not what it looks like
+
+[Attached reference: bar magnet with nested field-line arches and outward/inward fanning lines at its poles.]
+
+==================== PROMPT 19 ====================
+
+Tool: ChatGPT/Codex (OpenAI).
+
+There's some text being cut off here
+
+[Attached screenshot: the coating and copper labels are clipped in the Insulated wire close-up.]
+
+==================== PROMPT 20 ====================
+
+Tool: ChatGPT/Codex (OpenAI).
+
+commit and push this

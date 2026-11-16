@@ -37,7 +37,7 @@ window.CONTENT = {
       trigger: 'Place the magnet',
       title: "A permanent magnetic field (no battery needed)",
       body: "A permanent magnet keeps its magnetic field without an electrical supply, like a fridge magnet you might have at home. It can’t produce energy from just sitting still magnetism alone, however." },
-    { id: 'poles', topic: 'Building the generator', anchor: 'a-rotor', source: 'rewritten',
+    { id: 'poles', topic: 'Building the generator', anchor: 'a-rotor', source: 'rewritten', figure: 'magnetic-field',
       trigger: 'Tap the i next to the magnet',
       title: "North and south",
       body: "The N and S labels identify the magnet’s north and south poles. This magnet is between the coils so that its poles sweep past them when it rotates." },
